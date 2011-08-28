@@ -1,5 +1,5 @@
 (function() {
-  var ARENA_HEIGHT, ARENA_WIDTH, Arena, Bling, Entity, FPS, MAX_SPEED_BLING, MAX_SPEED_RING, Ring, Selection, arena, b, context, entities, r;
+  var ARENA_HEIGHT, ARENA_WIDTH, Arena, Bling, Entity, FPS, MAX_SPEED_BLING, MAX_SPEED_RING, Ring, Selection, arena, b, context, entities, r, s;
   var __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
@@ -7,7 +7,7 @@
     child.prototype = new ctor;
     child.__super__ = parent.prototype;
     return child;
-  };
+  }, __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
   ARENA_WIDTH = 640;
   ARENA_HEIGHT = 480;
   FPS = 40;
@@ -96,28 +96,32 @@
       this.bindKeys();
     }
     Selection.prototype.bindKeys = function() {
-      document.onmousemove = function(e) {
+      document.onmousemove = __bind(function(e) {
         var x, y;
         x = e.x - arena.offsetLeft - arena.clientLeft;
         y = e.y - arena.offsetTop - arena.clientTop;
-        this.end = [x, y];
-        if (this.start) {
-          return context.fillRect(this.start[0], this.start[1], this.end[0], this.end[1]);
-        }
-      };
-      document.onmousedown = function(e) {
+        return this.end = [x, y];
+      }, this);
+      document.onmousedown = __bind(function(e) {
         var x, y;
-        console.dir(arena);
         x = e.x - arena.offsetLeft - arena.clientLeft;
         y = e.y - arena.offsetTop - arena.clientTop;
         return this.start = [x, y];
-      };
-      return document.onmouseup = function(e) {
+      }, this);
+      return document.onmouseup = __bind(function(e) {
         var x, y;
         x = e.x - arena.offsetLeft - arena.clientLeft;
         y = e.y - arena.offsetTop - arena.clientTop;
         return this.start = false;
-      };
+      }, this);
+    };
+    Selection.prototype.draw = function() {
+      if (this.start) {
+        context.beginPath();
+        context.rect(this.start[0], this.start[1], this.end[0] - this.start[0], this.end[1] - this.start[1]);
+        context.strokeStyle = 'black';
+        return context.stroke();
+      }
     };
     return Selection;
   })();
@@ -128,9 +132,10 @@
   b = new Bling();
   b.position = [500, 100];
   b.draw();
+  s = new Selection();
   entities = [];
   entities.push(r);
   entities.push(b);
+  entities.push(s);
   new Arena();
-  new Selection();
 }).call(this);

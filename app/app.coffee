@@ -69,22 +69,25 @@ class Selection
     @end = false
     @bindKeys()
   bindKeys: ->
-    document.onmousemove = (e) ->
+    document.onmousemove = (e) =>
       x = e.x-arena.offsetLeft-arena.clientLeft
       y = e.y-arena.offsetTop-arena.clientTop
       @end = [x,y]
-      if @start
-        context.fillRect(@start[0], @start[1], @end[0], @end[1])
-    document.onmousedown = (e) ->
-      console.dir(arena)
+    document.onmousedown = (e) =>
       x = e.x-arena.offsetLeft-arena.clientLeft
       y = e.y-arena.offsetTop-arena.clientTop
       @start = [x,y]
-    document.onmouseup = (e) ->
+    document.onmouseup = (e) =>
       x = e.x-arena.offsetLeft-arena.clientLeft
       y = e.y-arena.offsetTop-arena.clientTop
       @start = false
-      # context.fillRect(x, y, 50, 50)
+  draw: ->
+    if @start
+      context.beginPath()
+      context.rect(@start[0], @start[1], @end[0]-@start[0], @end[1]-@start[1])
+      context.strokeStyle = 'black'
+      context.stroke()
+
 
 
 r = new Ring()
@@ -96,10 +99,12 @@ b = new Bling()
 b.position = [500,100]
 b.draw()
 
+s = new Selection()
+
 entities = []
 entities.push(r)
 entities.push(b)
+entities.push(s)
 
 
 new Arena()
-new Selection()
