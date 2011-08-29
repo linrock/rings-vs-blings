@@ -5,7 +5,7 @@ FPS = 40
 MAX_SPEED_RING = 10
 MAX_SPEED_BLING = 100
 
-ATTACK_RANGE_RING = 60
+ATTACK_RANGE_RING = 80
 ATTACK_RANGE_BLING = 20
 
 ATTACK_DAMAGE_RING = 6
@@ -85,14 +85,21 @@ class Ring extends Entity
     @hp = 45
     @max_speed = MAX_SPEED_RING
     @color = 'darkblue'
-  attackNearest: ->
+  checkNearbyEnemies: ->
+    candidates = []
     for i,e of BvR.arena.entities
       if e instanceof Bling
         x = e.position[0]-@position[0]
         y = e.position[1]-@position[1]
         d = Math.sqrt(Math.pow(x,2)+Math.pow(y,2))
         if d < ATTACK_RANGE_RING
-          e.dealDamage(ATTACK_DAMAGE_RING)
+          candidates.push([d,i])
+    if candidates.length > 0
+      candidates.sort()
+      BvR.arena.entities[candidates[0][1]].takeDamage(ATTACK_DAMAGE_RING)
+  draw: ->
+    super()
+    @checkNearbyEnemies() unless @flags.moving
   takeDamage: (hp) ->
     @hp -= hp
     @flags.finished = true if @hp <= 0

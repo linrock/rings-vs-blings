@@ -13,7 +13,7 @@
   FPS = 40;
   MAX_SPEED_RING = 10;
   MAX_SPEED_BLING = 100;
-  ATTACK_RANGE_RING = 60;
+  ATTACK_RANGE_RING = 80;
   ATTACK_RANGE_BLING = 20;
   ATTACK_DAMAGE_RING = 6;
   ATTACK_DAMAGE_BLING = 30;
@@ -111,15 +111,31 @@
       this.max_speed = MAX_SPEED_RING;
       this.color = 'darkblue';
     }
-    Ring.prototype.attackNearest = function() {
-      var d, e, i, x, y, _ref, _results;
+    Ring.prototype.checkNearbyEnemies = function() {
+      var candidates, d, e, i, x, y, _ref;
+      candidates = [];
       _ref = BvR.arena.entities;
-      _results = [];
       for (i in _ref) {
         e = _ref[i];
-        _results.push(e instanceof Bling ? (x = e.position[0] - this.position[0], y = e.position[1] - this.position[1], d = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)), d < ATTACK_RANGE_RING ? e.dealDamage(ATTACK_DAMAGE_RING) : void 0) : void 0);
+        if (e instanceof Bling) {
+          x = e.position[0] - this.position[0];
+          y = e.position[1] - this.position[1];
+          d = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+          if (d < ATTACK_RANGE_RING) {
+            candidates.push([d, i]);
+          }
+        }
       }
-      return _results;
+      if (candidates.length > 0) {
+        candidates.sort();
+        return BvR.arena.entities[candidates[0][1]].takeDamage(ATTACK_DAMAGE_RING);
+      }
+    };
+    Ring.prototype.draw = function() {
+      Ring.__super__.draw.call(this);
+      if (!this.flags.moving) {
+        return this.checkNearbyEnemies();
+      }
     };
     Ring.prototype.takeDamage = function(hp) {
       this.hp -= hp;
