@@ -5,8 +5,11 @@ FPS = 40
 MAX_SPEED_RING = 10
 MAX_SPEED_BLING = 100
 
-ATTACK_RANGE_RING = 10
+ATTACK_RANGE_RING = 60
+ATTACK_RANGE_BLING = 20
+
 ATTACK_DAMAGE_RING = 6
+ATTACK_DAMAGE_BLING = 30
 
 
 arena = document.getElementById('arena')
@@ -57,11 +60,23 @@ class Bling extends Entity
     @color = 'lightgreen'
   takeDamage: (hp) ->
     @hp -= hp
-    if @hp < 0
-      @explode()
+    @explode() if @hp <= 0
+  checkNearbyEnemies: ->
+    for i,e of BvR.arena.entities
+      if e instanceof Ring
+        x = e.position[0]-@position[0]
+        y = e.position[1]-@position[1]
+        d = Math.sqrt(Math.pow(x,2)+Math.pow(y,2))
+        if d < ATTACK_RANGE_BLING
+          @explode()
+          e.takeDamage(ATTACK_DAMAGE_BLING)
+  draw: ->
+    super()
+    @checkNearbyEnemies()
   explode: ->
     e = new Explosion(position: @position)
     BvR.arena.addEntity(e)
+    @flags.finished = true
 
 
 class Ring extends Entity
@@ -78,6 +93,9 @@ class Ring extends Entity
         d = Math.sqrt(Math.pow(x,2)+Math.pow(y,2))
         if d < ATTACK_RANGE_RING
           e.dealDamage(ATTACK_DAMAGE_RING)
+  takeDamage: (hp) ->
+    @hp -= hp
+    @flags.finished = true if @hp <= 0
 
 
 class Explosion
@@ -85,7 +103,7 @@ class Explosion
     @position = args.position
     @max_radius = 20
     @radius = 0
-    @rate = 50/FPS
+    @rate = 120/FPS
     @color = 'lightgreen'
     @flags =
       finished: false
@@ -155,8 +173,9 @@ class Selector
     xs = [start[0], end[0]].sort()
     ys = [start[1], end[1]].sort()
     for i,e of BvR.arena.entities
-      [x,y] = e.position
-      e.flags.selected = x > xs[0] and x < xs[1] and y > ys[0] and y < ys[1]
+      if e instanceof Ring
+        [x,y] = e.position
+        e.flags.selected = xs[0] < x < xs[1] and ys[0] < y < ys[1]
 
 
 window.BvR =
@@ -170,9 +189,18 @@ r.move([200,300])
 r.draw()
 BvR.arena.addEntity(r)
 
-b = new Bling()
-b.position = [500,100]
-b.draw()
-BvR.arena.addEntity(b)
-b.explode()
+b0 = new Bling()
+b0.position = [500,100]
+b0.draw()
+BvR.arena.addEntity(b0)
+
+b1 = new Bling()
+b1.position = [550,120]
+b1.draw()
+BvR.arena.addEntity(b1)
+
+b2 = new Bling()
+b2.position = [500,80]
+b2.draw()
+BvR.arena.addEntity(b2)
 
