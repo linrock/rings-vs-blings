@@ -271,9 +271,14 @@
       document.onmouseup = __bind(function(e) {
         return this.selectRegion(this.start, this.end);
       }, this);
-      return document.oncontextmenu = function() {
+      document.oncontextmenu = function() {
         return false;
       };
+      return document.onkeydown = __bind(function(e) {
+        if (e.keyCode === 27) {
+          return this.deselectAll();
+        }
+      }, this);
     };
     Selector.prototype.draw = function() {
       if (this.start && this.end) {
@@ -282,6 +287,16 @@
         context.strokeStyle = 'black';
         return context.stroke();
       }
+    };
+    Selector.prototype.deselectAll = function() {
+      var e, i, _ref, _results;
+      _ref = BvR.arena.entities;
+      _results = [];
+      for (i in _ref) {
+        e = _ref[i];
+        _results.push(e instanceof Ring ? e.flags.selected = false : void 0);
+      }
+      return _results;
     };
     Selector.prototype.selectRegion = function(start, end) {
       var e, i, x, xs, y, ys, _ref, _ref2;

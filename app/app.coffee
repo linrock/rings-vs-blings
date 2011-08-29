@@ -196,12 +196,18 @@ class Selector
     document.onmouseup = (e) =>
       @selectRegion(@start, @end)
     document.oncontextmenu = -> false
+    document.onkeydown = (e) =>
+      @deselectAll() if e.keyCode == 27
   draw: ->
     if @start and @end
       context.beginPath()
       context.rect(@start[0], @start[1], @end[0]-@start[0], @end[1]-@start[1])
       context.strokeStyle = 'black'
       context.stroke()
+  deselectAll: ->
+    for i,e of BvR.arena.entities
+      if e instanceof Ring
+        e.flags.selected = false
   selectRegion: (start, end) ->
     xs = [Math.min(start[0],end[0]), Math.max(start[0],end[0])]
     ys = [Math.min(start[1],end[1]), Math.max(start[1],end[1])]
