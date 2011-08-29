@@ -134,16 +134,17 @@ class Selector
       x = e.x-arena.offsetLeft-arena.clientLeft
       y = e.y-arena.offsetTop-arena.clientTop
       position = [x,y]
-      @start = position
-      for i,e of BvR.arena.entities
-        if e.flags.selected
-          e.move(position)
-          e.flags.selected = false
+      if e.button == 2
+        for i,e of BvR.arena.entities
+          if e.flags.selected
+            e.move(position)
+            e.flags.selected = false
+      else
+        @start = position
     document.onmouseup = (e) =>
-      x = e.x-arena.offsetLeft-arena.clientLeft
-      y = e.y-arena.offsetTop-arena.clientTop
       @selectRegion(@start, @end)
       @start = false
+    document.oncontextmenu = -> false
   draw: ->
     if @start
       context.beginPath()

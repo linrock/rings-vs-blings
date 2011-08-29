@@ -176,22 +176,25 @@
         x = e.x - arena.offsetLeft - arena.clientLeft;
         y = e.y - arena.offsetTop - arena.clientTop;
         position = [x, y];
-        this.start = position;
-        _ref = BvR.arena.entities;
-        _results = [];
-        for (i in _ref) {
-          e = _ref[i];
-          _results.push(e.flags.selected ? (e.move(position), e.flags.selected = false) : void 0);
+        if (e.button === 2) {
+          _ref = BvR.arena.entities;
+          _results = [];
+          for (i in _ref) {
+            e = _ref[i];
+            _results.push(e.flags.selected ? (e.move(position), e.flags.selected = false) : void 0);
+          }
+          return _results;
+        } else {
+          return this.start = position;
         }
-        return _results;
       }, this);
-      return document.onmouseup = __bind(function(e) {
-        var x, y;
-        x = e.x - arena.offsetLeft - arena.clientLeft;
-        y = e.y - arena.offsetTop - arena.clientTop;
+      document.onmouseup = __bind(function(e) {
         this.selectRegion(this.start, this.end);
         return this.start = false;
       }, this);
+      return document.oncontextmenu = function() {
+        return false;
+      };
     };
     Selector.prototype.draw = function() {
       if (this.start) {
