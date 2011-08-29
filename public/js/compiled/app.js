@@ -74,6 +74,7 @@
       Bling.__super__.constructor.call(this);
       this.hp = 40;
       this.max_speed = MAX_SPEED_BLING;
+      this.frame_offset = ~~(Math.random() * 20);
       this.color = 'lightgreen';
     }
     Bling.prototype.takeDamage = function(hp) {
@@ -100,8 +101,16 @@
       }
       return _results;
     };
+    Bling.prototype.animate = function() {
+      if ((BvR.frame + this.frame_offset) % 40 === 3) {
+        return this.radius = 6;
+      } else if ((BvR.frame + this.frame_offset) % 40 === 37) {
+        return this.radius = 6.8;
+      }
+    };
     Bling.prototype.draw = function() {
       Bling.__super__.draw.call(this);
+      this.animate();
       return this.checkNearbyEnemies();
     };
     Bling.prototype.explode = function() {
@@ -207,16 +216,19 @@
     }
     Arena.prototype.redrawLoop = function() {
       return this.interval = setInterval(__bind(function() {
-        var e, i, _ref, _ref2, _results;
+        var e, i, _ref, _ref2;
         context.clearRect(0, 0, ARENA_WIDTH, ARENA_HEIGHT);
         BvR.selector.draw();
         _ref = this.entities;
-        _results = [];
         for (i in _ref) {
           e = _ref[i];
-          _results.push(((_ref2 = e.flags) != null ? _ref2.finished : void 0) ? delete this.entities[i] : e.draw());
+          if ((_ref2 = e.flags) != null ? _ref2.finished : void 0) {
+            delete this.entities[i];
+          } else {
+            e.draw();
+          }
         }
-        return _results;
+        return BvR.frame++;
       }, this), 1000 / FPS);
     };
     Arena.prototype.addEntity = function(e) {
@@ -289,7 +301,8 @@
   })();
   window.BvR = {
     arena: new Arena(),
-    selector: new Selector()
+    selector: new Selector(),
+    frame: 0
   };
   r0 = new Ring();
   r0.position = [100, 100];

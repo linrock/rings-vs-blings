@@ -60,6 +60,7 @@ class Bling extends Entity
     super()
     @hp = 40
     @max_speed = MAX_SPEED_BLING
+    @frame_offset = ~~(Math.random()*20)
     @color = 'lightgreen'
   takeDamage: (hp) ->
     @hp -= hp
@@ -73,8 +74,14 @@ class Bling extends Entity
         if d < ATTACK_RANGE_BLING/2
           @explode()
           break
+  animate: ->
+    if (BvR.frame + @frame_offset) % 40 == 3
+      @radius = 6
+    else if (BvR.frame + @frame_offset) % 40 == 37
+      @radius = 6.8
   draw: ->
     super()
+    @animate()
     @checkNearbyEnemies()
   explode: ->
     e = new Explosion
@@ -158,6 +165,7 @@ class Arena
           delete @entities[i]
         else
           e.draw()
+      BvR.frame++
     , 1000/FPS
   addEntity: (e) ->
     @entities[@counter++] = e
@@ -207,6 +215,7 @@ class Selector
 window.BvR =
   arena: new Arena()
   selector: new Selector()
+  frame: 0
 
 
 r0 = new Ring()
