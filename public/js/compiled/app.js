@@ -1,5 +1,5 @@
 (function() {
-  var ARENA_HEIGHT, ARENA_WIDTH, Arena, Bling, BvR, Entity, FPS, MAX_SPEED_BLING, MAX_SPEED_RING, Ring, Selector, arena, b, context, r;
+  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_RING, ATTACK_RANGE_RING, Arena, Bling, Entity, Explosion, FPS, MAX_SPEED_BLING, MAX_SPEED_RING, Ring, Selector, arena, b, context, r;
   var __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
@@ -13,6 +13,8 @@
   FPS = 40;
   MAX_SPEED_RING = 10;
   MAX_SPEED_BLING = 100;
+  ATTACK_RANGE_RING = 10;
+  ATTACK_DAMAGE_RING = 6;
   arena = document.getElementById('arena');
   arena.width = ARENA_WIDTH;
   arena.height = ARENA_HEIGHT;
@@ -69,6 +71,19 @@
       this.max_speed = MAX_SPEED_BLING;
       this.color = 'lightgreen';
     }
+    Bling.prototype.takeDamage = function(hp) {
+      this.hp -= hp;
+      if (this.hp < 0) {
+        return this.explode();
+      }
+    };
+    Bling.prototype.explode = function() {
+      var e;
+      e = new Explosion({
+        position: this.position
+      });
+      return BvR.arena.addEntity(e);
+    };
     return Bling;
   })();
   Ring = (function() {
@@ -79,7 +94,44 @@
       this.max_speed = MAX_SPEED_RING;
       this.color = 'darkblue';
     }
+    Ring.prototype.attackNearest = function() {
+      var d, e, i, x, y, _ref, _results;
+      _ref = BvR.arena.entities;
+      _results = [];
+      for (i in _ref) {
+        e = _ref[i];
+        _results.push(e instanceof Bling ? (x = e.position[0] - this.position[0], y = e.position[1] - this.position[1], d = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)), d < ATTACK_RANGE_RING ? e.dealDamage(ATTACK_DAMAGE_RING) : void 0) : void 0);
+      }
+      return _results;
+    };
     return Ring;
+  })();
+  Explosion = (function() {
+    function Explosion(args) {
+      this.position = args.position;
+      this.max_radius = 20;
+      this.radius = 0;
+      this.rate = 50 / FPS;
+      this.color = 'lightgreen';
+      this.flags = {
+        finished: false
+      };
+    }
+    Explosion.prototype.draw = function() {
+      if (this.radius >= this.max_radius) {
+        this.rate *= -1;
+      }
+      this.radius += this.rate;
+      if (this.radius > 0) {
+        context.beginPath();
+        context.arc(this.position[0], this.position[1], this.radius, 2 * Math.PI, false);
+        context.fillStyle = this.color;
+        return context.fill();
+      } else {
+        return this.flags.finished = true;
+      }
+    };
+    return Explosion;
   })();
   Arena = (function() {
     function Arena() {
@@ -96,7 +148,7 @@
         _results = [];
         for (i in _ref) {
           e = _ref[i];
-          _results.push(((_ref2 = e.flags) != null ? _ref2.finished : void 0) ? delete e : e.draw());
+          _results.push(((_ref2 = e.flags) != null ? _ref2.finished : void 0) ? delete this.entities[i] : e.draw());
         }
         return _results;
       }, this), 1000 / FPS);
@@ -120,10 +172,18 @@
         return this.end = [x, y];
       }, this);
       document.onmousedown = __bind(function(e) {
-        var x, y;
+        var i, position, x, y, _ref, _results;
         x = e.x - arena.offsetLeft - arena.clientLeft;
         y = e.y - arena.offsetTop - arena.clientTop;
-        return this.start = [x, y];
+        position = [x, y];
+        this.start = position;
+        _ref = BvR.arena.entities;
+        _results = [];
+        for (i in _ref) {
+          e = _ref[i];
+          _results.push(e.flags.selected ? (e.move(position), e.flags.selected = false) : void 0);
+        }
+        return _results;
       }, this);
       return document.onmouseup = __bind(function(e) {
         var x, y;
@@ -156,17 +216,18 @@
     };
     return Selector;
   })();
+  window.BvR = {
+    arena: new Arena(),
+    selector: new Selector()
+  };
   r = new Ring();
   r.position = [100, 100];
   r.move([200, 300]);
   r.draw();
+  BvR.arena.addEntity(r);
   b = new Bling();
   b.position = [500, 100];
   b.draw();
-  BvR = {
-    arena: new Arena(),
-    selector: new Selector()
-  };
-  BvR.arena.addEntity(r);
   BvR.arena.addEntity(b);
+  b.explode();
 }).call(this);

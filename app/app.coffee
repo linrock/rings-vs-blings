@@ -5,6 +5,9 @@ FPS = 40
 MAX_SPEED_RING = 10
 MAX_SPEED_BLING = 100
 
+ATTACK_RANGE_RING = 10
+ATTACK_DAMAGE_RING = 6
+
 
 arena = document.getElementById('arena')
 arena.width = ARENA_WIDTH
@@ -52,6 +55,13 @@ class Bling extends Entity
     @hp = 40
     @max_speed = MAX_SPEED_BLING
     @color = 'lightgreen'
+  takeDamage: (hp) ->
+    @hp -= hp
+    if @hp < 0
+      @explode()
+  explode: ->
+    e = new Explosion(position: @position)
+    BvR.arena.addEntity(e)
 
 
 class Ring extends Entity
@@ -60,6 +70,35 @@ class Ring extends Entity
     @hp = 45
     @max_speed = MAX_SPEED_RING
     @color = 'darkblue'
+  attackNearest: ->
+    for i,e of BvR.arena.entities
+      if e instanceof Bling
+        x = e.position[0]-@position[0]
+        y = e.position[1]-@position[1]
+        d = Math.sqrt(Math.pow(x,2)+Math.pow(y,2))
+        if d < ATTACK_RANGE_RING
+          e.dealDamage(ATTACK_DAMAGE_RING)
+
+
+class Explosion
+  constructor: (args) ->
+    @position = args.position
+    @max_radius = 20
+    @radius = 0
+    @rate = 50/FPS
+    @color = 'lightgreen'
+    @flags =
+      finished: false
+  draw: ->
+    @rate *= -1 if @radius >= @max_radius
+    @radius += @rate
+    if @radius > 0
+      context.beginPath()
+      context.arc(@position[0], @position[1], @radius, 2*Math.PI, false)
+      context.fillStyle = @color
+      context.fill()
+    else
+      @flags.finished = true
 
 
 class Arena
@@ -73,7 +112,7 @@ class Arena
       BvR.selector.draw()
       for i,e of @entities
         if e.flags?.finished
-          delete(e)
+          delete @entities[i]
         else
           e.draw()
     , 1000/FPS
@@ -94,7 +133,12 @@ class Selector
     document.onmousedown = (e) =>
       x = e.x-arena.offsetLeft-arena.clientLeft
       y = e.y-arena.offsetTop-arena.clientTop
-      @start = [x,y]
+      position = [x,y]
+      @start = position
+      for i,e of BvR.arena.entities
+        if e.flags.selected
+          e.move(position)
+          e.flags.selected = false
     document.onmouseup = (e) =>
       x = e.x-arena.offsetLeft-arena.clientLeft
       y = e.y-arena.offsetTop-arena.clientTop
@@ -114,19 +158,20 @@ class Selector
       e.flags.selected = x > xs[0] and x < xs[1] and y > ys[0] and y < ys[1]
 
 
+window.BvR =
+  arena: new Arena()
+  selector: new Selector()
+
+
 r = new Ring()
 r.position = [100,100]
 r.move([200,300])
 r.draw()
+BvR.arena.addEntity(r)
 
 b = new Bling()
 b.position = [500,100]
 b.draw()
-
-
-BvR =
-  arena: new Arena()
-  selector: new Selector()
-
-BvR.arena.addEntity(r)
 BvR.arena.addEntity(b)
+b.explode()
+
