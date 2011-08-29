@@ -145,9 +145,10 @@ class Selector
     @bindKeys()
   bindKeys: ->
     document.onmousemove = (e) =>
-      x = e.x-arena.offsetLeft-arena.clientLeft
-      y = e.y-arena.offsetTop-arena.clientTop
-      @end = [x,y]
+      if @start
+        x = e.x-arena.offsetLeft-arena.clientLeft
+        y = e.y-arena.offsetTop-arena.clientTop
+        @end = [x,y]
     document.onmousedown = (e) =>
       x = e.x-arena.offsetLeft-arena.clientLeft
       y = e.y-arena.offsetTop-arena.clientTop
@@ -161,21 +162,21 @@ class Selector
         @start = position
     document.onmouseup = (e) =>
       @selectRegion(@start, @end)
-      @start = false
     document.oncontextmenu = -> false
   draw: ->
-    if @start
+    if @start and @end
       context.beginPath()
       context.rect(@start[0], @start[1], @end[0]-@start[0], @end[1]-@start[1])
       context.strokeStyle = 'black'
       context.stroke()
   selectRegion: (start, end) ->
-    xs = [start[0], end[0]].sort()
-    ys = [start[1], end[1]].sort()
+    xs = [Math.min(start[0],end[0]), Math.max(start[0],end[0])]
+    ys = [Math.min(start[1],end[1]), Math.max(start[1],end[1])]
     for i,e of BvR.arena.entities
       if e instanceof Ring
         [x,y] = e.position
         e.flags.selected = xs[0] < x < xs[1] and ys[0] < y < ys[1]
+    @start = @end = false
 
 
 window.BvR =
@@ -183,11 +184,16 @@ window.BvR =
   selector: new Selector()
 
 
-r = new Ring()
-r.position = [100,100]
-r.move([200,300])
-r.draw()
-BvR.arena.addEntity(r)
+r0 = new Ring()
+r0.position = [100,100]
+r0.draw()
+BvR.arena.addEntity(r0)
+
+r1 = new Ring()
+r1.position = [120,100]
+r1.draw()
+BvR.arena.addEntity(r1)
+
 
 b0 = new Bling()
 b0.position = [500,100]

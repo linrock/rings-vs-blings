@@ -1,5 +1,5 @@
 (function() {
-  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, Arena, Bling, Entity, Explosion, FPS, MAX_SPEED_BLING, MAX_SPEED_RING, Ring, Selector, arena, b0, b1, b2, context, r;
+  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, Arena, Bling, Entity, Explosion, FPS, MAX_SPEED_BLING, MAX_SPEED_RING, Ring, Selector, arena, b0, b1, b2, context, r0, r1;
   var __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
@@ -190,9 +190,11 @@
     Selector.prototype.bindKeys = function() {
       document.onmousemove = __bind(function(e) {
         var x, y;
-        x = e.x - arena.offsetLeft - arena.clientLeft;
-        y = e.y - arena.offsetTop - arena.clientTop;
-        return this.end = [x, y];
+        if (this.start) {
+          x = e.x - arena.offsetLeft - arena.clientLeft;
+          y = e.y - arena.offsetTop - arena.clientTop;
+          return this.end = [x, y];
+        }
       }, this);
       document.onmousedown = __bind(function(e) {
         var i, position, x, y, _ref, _results;
@@ -212,15 +214,14 @@
         }
       }, this);
       document.onmouseup = __bind(function(e) {
-        this.selectRegion(this.start, this.end);
-        return this.start = false;
+        return this.selectRegion(this.start, this.end);
       }, this);
       return document.oncontextmenu = function() {
         return false;
       };
     };
     Selector.prototype.draw = function() {
-      if (this.start) {
+      if (this.start && this.end) {
         context.beginPath();
         context.rect(this.start[0], this.start[1], this.end[0] - this.start[0], this.end[1] - this.start[1]);
         context.strokeStyle = 'black';
@@ -228,16 +229,18 @@
       }
     };
     Selector.prototype.selectRegion = function(start, end) {
-      var e, i, x, xs, y, ys, _ref, _ref2, _results;
-      xs = [start[0], end[0]].sort();
-      ys = [start[1], end[1]].sort();
+      var e, i, x, xs, y, ys, _ref, _ref2;
+      xs = [Math.min(start[0], end[0]), Math.max(start[0], end[0])];
+      ys = [Math.min(start[1], end[1]), Math.max(start[1], end[1])];
       _ref = BvR.arena.entities;
-      _results = [];
       for (i in _ref) {
         e = _ref[i];
-        _results.push(e instanceof Ring ? ((_ref2 = e.position, x = _ref2[0], y = _ref2[1], _ref2), e.flags.selected = (xs[0] < x && x < xs[1]) && (ys[0] < y && y < ys[1])) : void 0);
+        if (e instanceof Ring) {
+          _ref2 = e.position, x = _ref2[0], y = _ref2[1];
+          e.flags.selected = (xs[0] < x && x < xs[1]) && (ys[0] < y && y < ys[1]);
+        }
       }
-      return _results;
+      return this.start = this.end = false;
     };
     return Selector;
   })();
@@ -245,11 +248,14 @@
     arena: new Arena(),
     selector: new Selector()
   };
-  r = new Ring();
-  r.position = [100, 100];
-  r.move([200, 300]);
-  r.draw();
-  BvR.arena.addEntity(r);
+  r0 = new Ring();
+  r0.position = [100, 100];
+  r0.draw();
+  BvR.arena.addEntity(r0);
+  r1 = new Ring();
+  r1.position = [120, 100];
+  r1.draw();
+  BvR.arena.addEntity(r1);
   b0 = new Bling();
   b0.position = [500, 100];
   b0.draw();
