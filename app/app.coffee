@@ -28,6 +28,7 @@ class Entity
     @max_speed = false
     @position = false
     @target_position = false
+    @direction = false
   draw: ->
     @calculateNewPosition() if @flags.moving
     context.beginPath()
@@ -42,13 +43,15 @@ class Entity
     vector = [@target_position[0]-@position[0], @target_position[1]-@position[1]]
     m = Math.sqrt(Math.pow(vector[0],2)+Math.pow(vector[1],2))
     vector = [vector[0]*@max_speed/m, vector[1]*@max_speed/m]
-    @position = [@position[0]+vector[0], @position[1]+vector[1]]
-    s = [vector[0] > 0, vector[1] > 0]
-    if s[0]*(@position[0]-@target_position[0]) > 0 and s[1]*(@position[1]-@target_position[1]) > 0
-      @position = @target_position
+    direction = [vector[0] > 0, vector[1] > 0]
+    if direction[0] != @direction[0] or direction[1] != @direction[1]
       @flags.moving = false
+      @direction = false
+    else
+      @position = [@position[0]+vector[0], @position[1]+vector[1]]
   move: (position) ->
     @target_position = position
+    @direction = [@target_position[0]-@position[0] > 0, @target_position[1]-@position[1] > 0]
     @flags.moving = true
 
 
@@ -67,14 +70,17 @@ class Bling extends Entity
         x = e.position[0]-@position[0]
         y = e.position[1]-@position[1]
         d = Math.sqrt(Math.pow(x,2)+Math.pow(y,2))
-        if d < ATTACK_RANGE_BLING
+        if d < ATTACK_RANGE_BLING/2
           @explode()
-          e.takeDamage(ATTACK_DAMAGE_BLING)
+          break
   draw: ->
     super()
     @checkNearbyEnemies()
   explode: ->
-    e = new Explosion(position: @position)
+    e = new Explosion
+      position: @position
+      radius: ATTACK_RANGE_BLING
+      damage: ATTACK_DAMAGE_BLING
     BvR.arena.addEntity(e)
     @flags.finished = true
 
@@ -91,9 +97,9 @@ class Ring extends Entity
       if e instanceof Bling
         x = e.position[0]-@position[0]
         y = e.position[1]-@position[1]
-        d = Math.sqrt(Math.pow(x,2)+Math.pow(y,2))
-        if d < ATTACK_RANGE_RING
-          candidates.push([d,i])
+        d2 = Math.pow(x,2)+Math.pow(y,2)
+        if d2 < Math.pow(ATTACK_RANGE_RING,2)
+          candidates.push([d2,i])
     if candidates.length > 0
       candidates.sort()
       BvR.arena.entities[candidates[0][1]].takeDamage(ATTACK_DAMAGE_RING)
@@ -101,21 +107,25 @@ class Ring extends Entity
     super()
     @checkNearbyEnemies() unless @flags.moving
   takeDamage: (hp) ->
+    console.log('Took ' + hp + ' damage')
     @hp -= hp
     @flags.finished = true if @hp <= 0
 
 
 class Explosion
-  constructor: (args) ->
-    @position = args.position
-    @max_radius = 20
+  constructor: (kwargs) ->
+    @position = kwargs.position
+    @r_max = kwargs.radius
+    @r_max_2 = Math.pow(kwargs.radius,2)
+    @damage = kwargs.damage
     @radius = 0
     @rate = 120/FPS
     @color = 'lightgreen'
     @flags =
       finished: false
+    @damageNearbyEnemies()
   draw: ->
-    @rate *= -1 if @radius >= @max_radius
+    @rate *= -1 if @radius >= @r_max
     @radius += @rate
     if @radius > 0
       context.beginPath()
@@ -124,6 +134,14 @@ class Explosion
       context.fill()
     else
       @flags.finished = true
+  damageNearbyEnemies: ->
+    for i,e of BvR.arena.entities
+      if e instanceof Ring
+        x = e.position[0]-@position[0]
+        y = e.position[1]-@position[1]
+        d2 = Math.pow(x,2)+Math.pow(y,2)
+        if d2 <= @r_max_2
+          e.takeDamage(@damage)
 
 
 class Arena
