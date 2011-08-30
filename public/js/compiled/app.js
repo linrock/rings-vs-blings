@@ -13,13 +13,13 @@
   FPS = 40;
   COLOR_RING = 'darkblue';
   HP_RING = 45;
-  MAX_SPEED_RING = 4;
-  ATTACK_RATE_RING = 30;
-  ATTACK_RANGE_RING = 300;
-  ATTACK_DAMAGE_RING = 10;
+  MAX_SPEED_RING = 2.25;
+  ATTACK_RATE_RING = ~~(0.8608 * 40);
+  ATTACK_RANGE_RING = 200;
+  ATTACK_DAMAGE_RING = 6;
   COLOR_BLING = 'lightgreen';
   HP_BLING = 35;
-  MAX_SPEED_BLING = 4 * 1.3;
+  MAX_SPEED_BLING = 2.9531;
   ATTACK_RANGE_BLING = 40;
   ATTACK_DAMAGE_BLING = 30;
   arena = document.getElementById('arena');
@@ -89,9 +89,9 @@
     Bling.prototype.takeDamage = function(hp) {
       this.hp -= hp;
       this.color = 'orange';
-      if (this.hp <= 0) {
+      if (this.hp <= 0 && !this.flags.finished) {
         this.explode();
-        return BvR.selectors.kills.innerText = ++BvR.scores.kills;
+        return BvR.selectors.kills.innerText = ++BvR.stats.kills;
       }
     };
     Bling.prototype.checkNearbyEnemies = function() {
@@ -247,7 +247,6 @@
       this.flags = {
         finished: false
       };
-      console.log('New fadeaway...');
     }
     FadeAway.prototype.draw = function() {
       context.beginPath();
@@ -393,6 +392,9 @@
       }
       return _results;
     };
+    Arena.prototype.nextWave = function() {
+      return BvR.selectors.wave.innerText = ++BvR.stats.wave;
+    };
     return Arena;
   })();
   Selector = (function() {
@@ -480,11 +482,13 @@
     arena: new Arena(),
     selector: new Selector(),
     frame: 0,
-    scores: {
-      kills: 0
+    stats: {
+      kills: 0,
+      wave: 0
     },
     selectors: {
-      kills: document.getElementById('kills-count')
+      kills: document.getElementById('kills-count'),
+      wave: document.getElementById('wave-count')
     }
   };
   BvR.arena.spawnRings(5);

@@ -4,14 +4,14 @@ FPS = 40
 
 COLOR_RING = 'darkblue'
 HP_RING = 45
-MAX_SPEED_RING = 4
-ATTACK_RATE_RING = 30
-ATTACK_RANGE_RING = 300
-ATTACK_DAMAGE_RING = 10
+MAX_SPEED_RING = 2.25
+ATTACK_RATE_RING = ~~(0.8608*40)
+ATTACK_RANGE_RING = 200
+ATTACK_DAMAGE_RING = 6
 
 COLOR_BLING = 'lightgreen'
 HP_BLING = 35
-MAX_SPEED_BLING = 4*1.3
+MAX_SPEED_BLING = 2.9531
 ATTACK_RANGE_BLING = 40
 ATTACK_DAMAGE_BLING = 30
 
@@ -72,9 +72,9 @@ class Bling extends Entity
   takeDamage: (hp) ->
     @hp -= hp
     @color = 'orange'
-    if @hp <= 0
+    if @hp <= 0 and not @flags.finished
       @explode()
-      BvR.selectors.kills.innerText = ++BvR.scores.kills
+      BvR.selectors.kills.innerText = ++BvR.stats.kills
   checkNearbyEnemies: ->
     for i,e of BvR.arena.entities
       if e instanceof Ring and not e.flags.finished
@@ -170,7 +170,6 @@ class FadeAway
     @rate = 1/FPS
     @flags =
       finished: false
-    console.log('New fadeaway...')
   draw: ->
     context.beginPath()
     context.arc(@position[0], @position[1], @radius, 2*Math.PI, false)
@@ -274,6 +273,8 @@ class Arena
   spawnRings: (count) ->
     for i in [1..count]
       @addEntity(new Ring(position: [20+Math.random()*50, 20+Math.random()*100]))
+  nextWave: ->
+    BvR.selectors.wave.innerText = ++BvR.stats.wave
 
 
 class Selector
@@ -328,10 +329,12 @@ window.BvR =
   arena: new Arena()
   selector: new Selector()
   frame: 0
-  scores:
+  stats:
     kills: 0
+    wave: 0
   selectors:
     kills: document.getElementById('kills-count')
+    wave: document.getElementById('wave-count')
 
 
 BvR.arena.spawnRings(5)
