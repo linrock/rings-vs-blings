@@ -1,5 +1,5 @@
 (function() {
-  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, Bling, COLOR_BLING, COLOR_RING, Entity, Explosion, FPS, FadeAway, HP_BLING, HP_RING, MAX_SPEED_BLING, MAX_SPEED_RING, Projectile, Ring, Selector, arena, b, context, r, _i, _j, _len, _len2, _ref, _ref2;
+  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, Bling, COLOR_BLING, COLOR_RING, Entity, Explosion, FPS, FadeAway, HP_BLING, HP_RING, MAX_SPEED_BLING, MAX_SPEED_RING, Projectile, Ring, Selector, arena, context;
   var __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
@@ -13,13 +13,13 @@
   FPS = 40;
   COLOR_RING = 'darkblue';
   HP_RING = 45;
-  MAX_SPEED_RING = 10;
+  MAX_SPEED_RING = 4;
   ATTACK_RATE_RING = 30;
-  ATTACK_RANGE_RING = 800;
+  ATTACK_RANGE_RING = 300;
   ATTACK_DAMAGE_RING = 10;
   COLOR_BLING = 'lightgreen';
   HP_BLING = 35;
-  MAX_SPEED_BLING = 5;
+  MAX_SPEED_BLING = 4 * 1.3;
   ATTACK_RANGE_BLING = 40;
   ATTACK_DAMAGE_BLING = 30;
   arena = document.getElementById('arena');
@@ -91,7 +91,7 @@
       this.color = 'orange';
       if (this.hp <= 0) {
         this.explode();
-        return BvR.scores.kills++;
+        return BvR.selectors.kills.innerText = ++BvR.scores.kills;
       }
     };
     Bling.prototype.checkNearbyEnemies = function() {
@@ -373,6 +373,26 @@
     Arena.prototype.addEntity = function(e) {
       return this.entities[this.counter++] = e;
     };
+    Arena.prototype.spawnBlings = function(count) {
+      var i, _results;
+      _results = [];
+      for (i = 1; 1 <= count ? i <= count : i >= count; 1 <= count ? i++ : i--) {
+        _results.push(this.addEntity(new Bling({
+          position: [400 + Math.random() * 200, 20 + Math.random() * 300]
+        })));
+      }
+      return _results;
+    };
+    Arena.prototype.spawnRings = function(count) {
+      var i, _results;
+      _results = [];
+      for (i = 1; 1 <= count ? i <= count : i >= count; 1 <= count ? i++ : i--) {
+        _results.push(this.addEntity(new Ring({
+          position: [20 + Math.random() * 50, 20 + Math.random() * 100]
+        })));
+      }
+      return _results;
+    };
     return Arena;
   })();
   Selector = (function() {
@@ -462,38 +482,11 @@
     frame: 0,
     scores: {
       kills: 0
+    },
+    selectors: {
+      kills: document.getElementById('kills-count')
     }
   };
-  _ref = [
-    new Ring({
-      position: [100, 100]
-    }), new Ring({
-      position: [120, 100]
-    }), new Ring({
-      position: [80, 70]
-    })
-  ];
-  for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-    r = _ref[_i];
-    BvR.arena.addEntity(r);
-  }
-  _ref2 = [
-    new Bling({
-      position: [500, 100]
-    }), new Bling({
-      position: [550, 120]
-    }), new Bling({
-      position: [500, 80]
-    }), new Bling({
-      position: [530, 70]
-    }), new Bling({
-      position: [450, 170]
-    }), new Bling({
-      position: [480, 200]
-    })
-  ];
-  for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
-    b = _ref2[_j];
-    BvR.arena.addEntity(b);
-  }
+  BvR.arena.spawnRings(5);
+  BvR.arena.spawnBlings(5);
 }).call(this);

@@ -4,14 +4,14 @@ FPS = 40
 
 COLOR_RING = 'darkblue'
 HP_RING = 45
-MAX_SPEED_RING = 10
+MAX_SPEED_RING = 4
 ATTACK_RATE_RING = 30
-ATTACK_RANGE_RING = 800
+ATTACK_RANGE_RING = 300
 ATTACK_DAMAGE_RING = 10
 
 COLOR_BLING = 'lightgreen'
 HP_BLING = 35
-MAX_SPEED_BLING = 5
+MAX_SPEED_BLING = 4*1.3
 ATTACK_RANGE_BLING = 40
 ATTACK_DAMAGE_BLING = 30
 
@@ -74,7 +74,7 @@ class Bling extends Entity
     @color = 'orange'
     if @hp <= 0
       @explode()
-      BvR.scores.kills++
+      BvR.selectors.kills.innerText = ++BvR.scores.kills
   checkNearbyEnemies: ->
     for i,e of BvR.arena.entities
       if e instanceof Ring and not e.flags.finished
@@ -268,6 +268,12 @@ class Arena
     , 1000/FPS
   addEntity: (e) ->
     @entities[@counter++] = e
+  spawnBlings: (count) ->
+    for i in [1..count]
+      @addEntity(new Bling(position: [400+Math.random()*200, 20+Math.random()*300]))
+  spawnRings: (count) ->
+    for i in [1..count]
+      @addEntity(new Ring(position: [20+Math.random()*50, 20+Math.random()*100]))
 
 
 class Selector
@@ -324,18 +330,9 @@ window.BvR =
   frame: 0
   scores:
     kills: 0
+  selectors:
+    kills: document.getElementById('kills-count')
 
 
-BvR.arena.addEntity(r) for r in [
-  new Ring(position: [100,100]),
-  new Ring(position: [120,100])
-  new Ring(position: [80,70])
-]
-BvR.arena.addEntity(b) for b in [
-  new Bling(position: [500,100]),
-  new Bling(position: [550,120]),
-  new Bling(position: [500,80])
-  new Bling(position: [530,70])
-  new Bling(position: [450,170])
-  new Bling(position: [480,200])
-]
+BvR.arena.spawnRings(5)
+BvR.arena.spawnBlings(5)
