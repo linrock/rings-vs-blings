@@ -6,7 +6,7 @@ HP_RING = 45
 MAX_SPEED_RING = 10
 ATTACK_RATE_RING = 30
 ATTACK_RANGE_RING = 80
-ATTACK_DAMAGE_RING = 6
+ATTACK_DAMAGE_RING = 60
 
 HP_BLING = 35
 MAX_SPEED_BLING = 5
@@ -102,7 +102,8 @@ class Bling extends Entity
         if e instanceof Ring
           @target_id = i
           break
-    @move(BvR.arena.entities[@target_id].position)
+    target = BvR.arena.entities[@target_id]
+    @move(target.position) if target
 
 
 class Ring extends Entity
@@ -122,7 +123,12 @@ class Ring extends Entity
           candidates.push([d2,i])
     if candidates.length > 0
       candidates.sort()
-      BvR.arena.entities[candidates[0][1]].takeDamage(ATTACK_DAMAGE_RING)
+      target = BvR.arena.entities[candidates[0][1]]
+      p = new Projectile
+        position: @position
+        target: target
+        damage: ATTACK_DAMAGE_RING
+      BvR.arena.addEntity(p)
   mainLoop: ->
     super()
     @checkNearbyEnemies() if not @flags.moving and BvR.frame % ATTACK_RATE_RING == 0
@@ -145,16 +151,17 @@ class Explosion
       finished: false
     @damageNearbyEnemies()
   draw: ->
+    context.beginPath()
+    context.arc(@position[0], @position[1], @radius, 2*Math.PI, false)
+    context.fillStyle = @color
+    context.fill()
+  mainLoop: ->
     @rate *= -1 if @radius >= @r_max
     @radius += @rate
     if @radius > 0
-      context.beginPath()
-      context.arc(@position[0], @position[1], @radius, 2*Math.PI, false)
-      context.fillStyle = @color
-      context.fill()
+      @draw()
     else
       @flags.finished = true
-  mainLoop: -> @draw()
   damageNearbyEnemies: ->
     for i,e of BvR.arena.entities
       if e instanceof Ring
@@ -163,6 +170,37 @@ class Explosion
         d2 = Math.pow(x,2)+Math.pow(y,2)
         if d2 <= @r_max_2
           e.takeDamage(@damage)
+
+
+class Projectile
+  constructor: (kwargs) ->
+    @position = kwargs.position
+    @target = kwargs.target
+    @damage = kwargs.damage
+    @direction = [@target.position[0]-@position[0] > 0, @target.position[1]-@position[1] > 0]
+    @max_speed = 20
+    @rate = 5
+    @radius = 2
+    @color = 'black'
+    @flags =
+      finished: false
+  draw: ->
+    context.beginPath()
+    context.arc(@position[0], @position[1], @radius, 2*Math.PI, false)
+    context.fillStyle = @color
+    context.fill()
+  mainLoop: ->
+    unless @flags.finished
+      @draw()
+      vector = [@target.position[0]-@position[0], @target.position[1]-@position[1]]
+      direction = [vector[0] > 0, vector[1] > 0]
+      m = Math.sqrt(Math.pow(vector[0],2)+Math.pow(vector[1],2))
+      vector = [vector[0]*@max_speed/m, vector[1]*@max_speed/m]
+      if direction[0] != @direction[0] or direction[1] != @direction[1]
+        @flags.finished = true
+        @target.takeDamage(@damage)
+      else
+        @position = [@position[0]+vector[0], @position[1]+vector[1]]
 
 
 class Arena

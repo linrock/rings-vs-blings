@@ -1,5 +1,5 @@
 (function() {
-  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, Bling, Entity, Explosion, FPS, HP_BLING, HP_RING, MAX_SPEED_BLING, MAX_SPEED_RING, Ring, Selector, arena, b, context, r, _i, _j, _len, _len2, _ref, _ref2;
+  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, Bling, Entity, Explosion, FPS, HP_BLING, HP_RING, MAX_SPEED_BLING, MAX_SPEED_RING, Projectile, Ring, Selector, arena, b, context, r, _i, _j, _len, _len2, _ref, _ref2;
   var __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
@@ -15,7 +15,7 @@
   MAX_SPEED_RING = 10;
   ATTACK_RATE_RING = 30;
   ATTACK_RANGE_RING = 80;
-  ATTACK_DAMAGE_RING = 6;
+  ATTACK_DAMAGE_RING = 60;
   HP_BLING = 35;
   MAX_SPEED_BLING = 5;
   ATTACK_RANGE_BLING = 20;
@@ -134,7 +134,7 @@
       return this.flags.finished = true;
     };
     Bling.prototype.attackNearest = function() {
-      var e, i, _ref;
+      var e, i, target, _ref;
       if (!(this.target_id && BvR.arena.entities[this.target_id])) {
         _ref = BvR.arena.entities;
         for (i in _ref) {
@@ -145,7 +145,10 @@
           }
         }
       }
-      return this.move(BvR.arena.entities[this.target_id].position);
+      target = BvR.arena.entities[this.target_id];
+      if (target) {
+        return this.move(target.position);
+      }
     };
     return Bling;
   })();
@@ -158,7 +161,7 @@
       this.color = 'darkblue';
     }
     Ring.prototype.checkNearbyEnemies = function() {
-      var candidates, d2, e, i, x, y, _ref;
+      var candidates, d2, e, i, p, target, x, y, _ref;
       candidates = [];
       _ref = BvR.arena.entities;
       for (i in _ref) {
@@ -174,7 +177,13 @@
       }
       if (candidates.length > 0) {
         candidates.sort();
-        return BvR.arena.entities[candidates[0][1]].takeDamage(ATTACK_DAMAGE_RING);
+        target = BvR.arena.entities[candidates[0][1]];
+        p = new Projectile({
+          position: this.position,
+          target: target,
+          damage: ATTACK_DAMAGE_RING
+        });
+        return BvR.arena.addEntity(p);
       }
     };
     Ring.prototype.mainLoop = function() {
@@ -207,21 +216,21 @@
       this.damageNearbyEnemies();
     }
     Explosion.prototype.draw = function() {
+      context.beginPath();
+      context.arc(this.position[0], this.position[1], this.radius, 2 * Math.PI, false);
+      context.fillStyle = this.color;
+      return context.fill();
+    };
+    Explosion.prototype.mainLoop = function() {
       if (this.radius >= this.r_max) {
         this.rate *= -1;
       }
       this.radius += this.rate;
       if (this.radius > 0) {
-        context.beginPath();
-        context.arc(this.position[0], this.position[1], this.radius, 2 * Math.PI, false);
-        context.fillStyle = this.color;
-        return context.fill();
+        return this.draw();
       } else {
         return this.flags.finished = true;
       }
-    };
-    Explosion.prototype.mainLoop = function() {
-      return this.draw();
     };
     Explosion.prototype.damageNearbyEnemies = function() {
       var d2, e, i, x, y, _ref, _results;
@@ -234,6 +243,44 @@
       return _results;
     };
     return Explosion;
+  })();
+  Projectile = (function() {
+    function Projectile(kwargs) {
+      this.position = kwargs.position;
+      this.target = kwargs.target;
+      this.damage = kwargs.damage;
+      this.direction = [this.target.position[0] - this.position[0] > 0, this.target.position[1] - this.position[1] > 0];
+      this.max_speed = 20;
+      this.rate = 5;
+      this.radius = 2;
+      this.color = 'black';
+      this.flags = {
+        finished: false
+      };
+    }
+    Projectile.prototype.draw = function() {
+      context.beginPath();
+      context.arc(this.position[0], this.position[1], this.radius, 2 * Math.PI, false);
+      context.fillStyle = this.color;
+      return context.fill();
+    };
+    Projectile.prototype.mainLoop = function() {
+      var direction, m, vector;
+      if (!this.flags.finished) {
+        this.draw();
+        vector = [this.target.position[0] - this.position[0], this.target.position[1] - this.position[1]];
+        direction = [vector[0] > 0, vector[1] > 0];
+        m = Math.sqrt(Math.pow(vector[0], 2) + Math.pow(vector[1], 2));
+        vector = [vector[0] * this.max_speed / m, vector[1] * this.max_speed / m];
+        if (direction[0] !== this.direction[0] || direction[1] !== this.direction[1]) {
+          this.flags.finished = true;
+          return this.target.takeDamage(this.damage);
+        } else {
+          return this.position = [this.position[0] + vector[0], this.position[1] + vector[1]];
+        }
+      }
+    };
+    return Projectile;
   })();
   Arena = (function() {
     function Arena() {
