@@ -77,7 +77,7 @@ class Bling extends Entity
       BvR.scores.kills++
   checkNearbyEnemies: ->
     for i,e of BvR.arena.entities
-      if e instanceof Ring
+      if e instanceof Ring and not e.flags.finished
         x = e.position[0]-@position[0]
         y = e.position[1]-@position[1]
         d2 = Math.pow(x,2)+Math.pow(y,2)
@@ -153,7 +153,36 @@ class Ring extends Entity
   takeDamage: (hp) ->
     console.log('A ring took ' + hp + ' damage!')
     @hp -= hp
-    @flags.finished = true if @hp <= 0
+    @destroy() if @hp <= 0
+  destroy: ->
+    unless @flags.finished
+      f = new FadeAway(position: @position, radius: @radius)
+      BvR.arena.addEntity(f)
+    @flags.finished = true
+
+
+class FadeAway
+  constructor: (kwargs) ->
+    @position = kwargs.position
+    @radius = kwargs.radius
+    @color = 'rgba(0,0,139,1)'
+    @opacity = 1
+    @rate = 1/FPS
+    @flags =
+      finished: false
+    console.log('New fadeaway...')
+  draw: ->
+    context.beginPath()
+    context.arc(@position[0], @position[1], @radius, 2*Math.PI, false)
+    context.fillStyle = @color
+    context.fill()
+  mainLoop: ->
+    @color = 'rgba(0,0,139,' + @opacity + ')'
+    @opacity -= @rate
+    if @opacity > 0
+      @draw()
+    else
+      @flags.finished = true
 
 
 class Explosion

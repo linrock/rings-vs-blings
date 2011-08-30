@@ -1,5 +1,5 @@
 (function() {
-  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, Bling, COLOR_BLING, COLOR_RING, Entity, Explosion, FPS, HP_BLING, HP_RING, MAX_SPEED_BLING, MAX_SPEED_RING, Projectile, Ring, Selector, arena, b, context, r, _i, _j, _len, _len2, _ref, _ref2;
+  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, Bling, COLOR_BLING, COLOR_RING, Entity, Explosion, FPS, FadeAway, HP_BLING, HP_RING, MAX_SPEED_BLING, MAX_SPEED_RING, Projectile, Ring, Selector, arena, b, context, r, _i, _j, _len, _len2, _ref, _ref2;
   var __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
@@ -100,7 +100,7 @@
       _results = [];
       for (i in _ref) {
         e = _ref[i];
-        if (e instanceof Ring) {
+        if (e instanceof Ring && !e.flags.finished) {
           x = e.position[0] - this.position[0];
           y = e.position[1] - this.position[1];
           d2 = Math.pow(x, 2) + Math.pow(y, 2);
@@ -221,10 +221,50 @@
       console.log('A ring took ' + hp + ' damage!');
       this.hp -= hp;
       if (this.hp <= 0) {
+        return this.destroy();
+      }
+    };
+    Ring.prototype.destroy = function() {
+      var f;
+      if (!this.flags.finished) {
+        f = new FadeAway({
+          position: this.position,
+          radius: this.radius
+        });
+        BvR.arena.addEntity(f);
+      }
+      return this.flags.finished = true;
+    };
+    return Ring;
+  })();
+  FadeAway = (function() {
+    function FadeAway(kwargs) {
+      this.position = kwargs.position;
+      this.radius = kwargs.radius;
+      this.color = 'rgba(0,0,139,1)';
+      this.opacity = 1;
+      this.rate = 1 / FPS;
+      this.flags = {
+        finished: false
+      };
+      console.log('New fadeaway...');
+    }
+    FadeAway.prototype.draw = function() {
+      context.beginPath();
+      context.arc(this.position[0], this.position[1], this.radius, 2 * Math.PI, false);
+      context.fillStyle = this.color;
+      return context.fill();
+    };
+    FadeAway.prototype.mainLoop = function() {
+      this.color = 'rgba(0,0,139,' + this.opacity + ')';
+      this.opacity -= this.rate;
+      if (this.opacity > 0) {
+        return this.draw();
+      } else {
         return this.flags.finished = true;
       }
     };
-    return Ring;
+    return FadeAway;
   })();
   Explosion = (function() {
     function Explosion(kwargs) {
