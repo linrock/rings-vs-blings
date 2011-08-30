@@ -20,7 +20,7 @@
   COLOR_BLING = 'lightgreen';
   HP_BLING = 35;
   MAX_SPEED_BLING = 5;
-  ATTACK_RANGE_BLING = 20;
+  ATTACK_RANGE_BLING = 40;
   ATTACK_DAMAGE_BLING = 30;
   arena = document.getElementById('arena');
   arena.width = ARENA_WIDTH;
@@ -90,7 +90,8 @@
       this.hp -= hp;
       this.color = 'orange';
       if (this.hp <= 0) {
-        return this.explode();
+        this.explode();
+        return BvR.scores.kills++;
       }
     };
     Bling.prototype.checkNearbyEnemies = function() {
@@ -115,10 +116,11 @@
       if (BvR.frame % 2 === 0) {
         this.color = COLOR_BLING;
       }
-      if ((BvR.frame + this.frame_offset) % 40 === 3) {
-        return this.radius = 6;
-      } else if ((BvR.frame + this.frame_offset) % 40 === 37) {
-        return this.radius = 6.8;
+      switch ((BvR.frame + this.frame_offset) % 40) {
+        case 3:
+          return this.radius = 6;
+        case 37:
+          return this.radius = 6.8;
       }
     };
     Bling.prototype.mainLoop = function() {
@@ -159,8 +161,10 @@
             candidates.push([d2, i]);
           }
         }
-        candidates.sort();
-        this.target_id = candidates[0][1];
+        if (candidates.length > 0) {
+          candidates.sort();
+          this.target_id = candidates[0][1];
+        }
       }
       target = BvR.arena.entities[this.target_id];
       if (target) {
@@ -214,7 +218,7 @@
       }
     };
     Ring.prototype.takeDamage = function(hp) {
-      console.log('Took ' + hp + ' damage');
+      console.log('A ring took ' + hp + ' damage!');
       this.hp -= hp;
       if (this.hp <= 0) {
         return this.flags.finished = true;
@@ -229,7 +233,7 @@
       this.r_max_2 = Math.pow(kwargs.radius, 2);
       this.damage = kwargs.damage;
       this.radius = 0;
-      this.rate = 120 / FPS;
+      this.rate = 240 / FPS;
       this.color = COLOR_BLING;
       this.flags = {
         finished: false
@@ -398,8 +402,8 @@
     };
     Selector.prototype.selectRegion = function(start, end) {
       var e, i, x, xs, y, ys, _ref, _ref2;
-      xs = [Math.min(start[0], end[0]), Math.max(start[0], end[0])];
-      ys = [Math.min(start[1], end[1]), Math.max(start[1], end[1])];
+      xs = start[0] < end[0] ? [start[0], end[0]] : [end[0], start[0]];
+      ys = start[1] < end[1] ? [start[1], end[1]] : [end[1], start[1]];
       _ref = BvR.arena.entities;
       for (i in _ref) {
         e = _ref[i];
@@ -415,7 +419,10 @@
   window.BvR = {
     arena: new Arena(),
     selector: new Selector(),
-    frame: 0
+    frame: 0,
+    scores: {
+      kills: 0
+    }
   };
   _ref = [
     new Ring({

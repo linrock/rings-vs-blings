@@ -12,7 +12,7 @@ ATTACK_DAMAGE_RING = 10
 COLOR_BLING = 'lightgreen'
 HP_BLING = 35
 MAX_SPEED_BLING = 5
-ATTACK_RANGE_BLING = 20
+ATTACK_RANGE_BLING = 40
 ATTACK_DAMAGE_BLING = 30
 
 
@@ -72,7 +72,9 @@ class Bling extends Entity
   takeDamage: (hp) ->
     @hp -= hp
     @color = 'orange'
-    @explode() if @hp <= 0
+    if @hp <= 0
+      @explode()
+      BvR.scores.kills++
   checkNearbyEnemies: ->
     for i,e of BvR.arena.entities
       if e instanceof Ring
@@ -84,10 +86,9 @@ class Bling extends Entity
           break
   animate: ->
     @color = COLOR_BLING if BvR.frame % 2 == 0
-    if (BvR.frame + @frame_offset) % 40 == 3
-      @radius = 6
-    else if (BvR.frame + @frame_offset) % 40 == 37
-      @radius = 6.8
+    switch (BvR.frame + @frame_offset) % 40
+      when 3 then @radius = 6
+      when 37 then @radius = 6.8
   mainLoop: ->
     super()
     @animate()
@@ -114,8 +115,9 @@ class Bling extends Entity
           y = e.position[1]-@position[1]
           d2 = Math.pow(x,2)+Math.pow(y,2)
           candidates.push([d2,i])
-      candidates.sort()
-      @target_id = candidates[0][1]
+      if candidates.length > 0
+        candidates.sort()
+        @target_id = candidates[0][1]
     target = BvR.arena.entities[@target_id]
     @move(target.position) if target
 
@@ -149,7 +151,7 @@ class Ring extends Entity
     @color = COLOR_RING if BvR.frame % 2 == 0
     @checkNearbyEnemies() if not @flags.moving and BvR.frame % ATTACK_RATE_RING == 0
   takeDamage: (hp) ->
-    console.log('Took ' + hp + ' damage')
+    console.log('A ring took ' + hp + ' damage!')
     @hp -= hp
     @flags.finished = true if @hp <= 0
 
@@ -161,7 +163,7 @@ class Explosion
     @r_max_2 = Math.pow(kwargs.radius,2)
     @damage = kwargs.damage
     @radius = 0
-    @rate = 120/FPS
+    @rate = 240/FPS
     @color = COLOR_BLING
     @flags =
       finished: false
@@ -278,8 +280,8 @@ class Selector
       if e instanceof Ring
         e.flags.selected = false
   selectRegion: (start, end) ->
-    xs = [Math.min(start[0],end[0]), Math.max(start[0],end[0])]
-    ys = [Math.min(start[1],end[1]), Math.max(start[1],end[1])]
+    xs = if start[0]<end[0] then [start[0],end[0]] else [end[0],start[0]]
+    ys = if start[1]<end[1] then [start[1],end[1]] else [end[1],start[1]]
     for i,e of BvR.arena.entities
       if e instanceof Ring
         [x,y] = e.position
@@ -291,6 +293,8 @@ window.BvR =
   arena: new Arena()
   selector: new Selector()
   frame: 0
+  scores:
+    kills: 0
 
 
 BvR.arena.addEntity(r) for r in [
