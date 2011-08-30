@@ -1,5 +1,5 @@
 (function() {
-  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, Bling, COLOR_BLING, COLOR_RING, Entity, Explosion, FPS, FadeAway, HP_BLING, HP_RING, MAX_SPEED_BLING, MAX_SPEED_RING, Projectile, Ring, Selector, arena, context;
+  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, Bling, COLOR_BLING, COLOR_RING, Entity, Explosion, FPS, FadeAway, HP_BLING, HP_RING, MAX_SPEED_BLING, MAX_SPEED_RING, Projectile, RADIUS, RADIUS_2, Ring, Selector, arena, context;
   var __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
@@ -11,6 +11,8 @@
   ARENA_WIDTH = 640;
   ARENA_HEIGHT = 480;
   FPS = 40;
+  RADIUS = 8;
+  RADIUS_2 = RADIUS * RADIUS;
   COLOR_RING = 'darkblue';
   HP_RING = 45;
   MAX_SPEED_RING = 2.25;
@@ -28,7 +30,7 @@
   context = arena.getContext('2d');
   Entity = (function() {
     function Entity(kwargs) {
-      this.radius = 6;
+      this.radius = RADIUS;
       this.flags = {
         moving: false,
         selected: false,
@@ -74,6 +76,7 @@
       this.direction = [this.target_position[0] - this.position[0] > 0, this.target_position[1] - this.position[1] > 0];
       return this.flags.moving = true;
     };
+    Entity.prototype.detectCollisions = function() {};
     return Entity;
   })();
   Bling = (function() {
@@ -118,9 +121,9 @@
       }
       switch ((BvR.frame + this.frame_offset) % 40) {
         case 3:
-          return this.radius = 6;
+          return this.radius = RADIUS;
         case 37:
-          return this.radius = 6.8;
+          return this.radius = RADIUS + 1;
       }
     };
     Bling.prototype.mainLoop = function() {
@@ -430,7 +433,20 @@
         }
       }, this);
       document.onmouseup = __bind(function(e) {
-        return this.selectRegion(this.start, this.end);
+        var i, x, y, _ref, _results;
+        this.selectRegion(this.start, this.end);
+        x = e.x - arena.offsetLeft - arena.clientLeft;
+        y = e.y - arena.offsetTop - arena.clientTop;
+        _ref = BvR.arena.entities;
+        _results = [];
+        for (i in _ref) {
+          e = _ref[i];
+          if (e instanceof Ring && Math.pow(e.position[0] - x, 2) + Math.pow(e.position[1] - y, 2) < RADIUS_2) {
+            e.flags.selected = true;
+            break;
+          }
+        }
+        return _results;
       }, this);
       document.oncontextmenu = function() {
         return false;
@@ -491,6 +507,6 @@
       wave: document.getElementById('wave-count')
     }
   };
-  BvR.arena.spawnRings(5);
-  BvR.arena.spawnBlings(5);
+  BvR.arena.spawnRings(20);
+  BvR.arena.spawnBlings(20);
 }).call(this);

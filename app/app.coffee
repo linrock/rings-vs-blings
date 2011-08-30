@@ -1,6 +1,8 @@
 ARENA_WIDTH = 640
 ARENA_HEIGHT = 480
 FPS = 40
+RADIUS = 8
+RADIUS_2 = RADIUS*RADIUS
 
 COLOR_RING = 'darkblue'
 HP_RING = 45
@@ -24,7 +26,7 @@ context = arena.getContext('2d')
 
 class Entity
   constructor: (kwargs) ->
-    @radius = 6
+    @radius = RADIUS
     @flags =
       moving: false
       selected: false
@@ -59,6 +61,8 @@ class Entity
     @target_position = position
     @direction = [@target_position[0]-@position[0] > 0, @target_position[1]-@position[1] > 0]
     @flags.moving = true
+  detectCollisions: ->
+      
 
 
 class Bling extends Entity
@@ -87,8 +91,8 @@ class Bling extends Entity
   animate: ->
     @color = COLOR_BLING if BvR.frame % 2 == 0
     switch (BvR.frame + @frame_offset) % 40
-      when 3 then @radius = 6
-      when 37 then @radius = 6.8
+      when 3 then @radius = RADIUS
+      when 37 then @radius = RADIUS+1
   mainLoop: ->
     super()
     @animate()
@@ -301,6 +305,12 @@ class Selector
         @start = position
     document.onmouseup = (e) =>
       @selectRegion(@start, @end)
+      x = e.x-arena.offsetLeft-arena.clientLeft
+      y = e.y-arena.offsetTop-arena.clientTop
+      for i,e of BvR.arena.entities
+        if e instanceof Ring and Math.pow(e.position[0]-x,2) + Math.pow(e.position[1]-y,2) < RADIUS_2
+          e.flags.selected = true
+          break
     document.oncontextmenu = -> false
     document.onkeydown = (e) =>
       @deselectAll() if e.keyCode == 27
@@ -337,5 +347,5 @@ window.BvR =
     wave: document.getElementById('wave-count')
 
 
-BvR.arena.spawnRings(5)
-BvR.arena.spawnBlings(5)
+BvR.arena.spawnRings(20)
+BvR.arena.spawnBlings(20)
