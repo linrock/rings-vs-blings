@@ -1,5 +1,5 @@
 (function() {
-  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, Bling, Entity, Explosion, FPS, HP_BLING, HP_RING, MAX_SPEED_BLING, MAX_SPEED_RING, Projectile, Ring, Selector, arena, b, context, r, _i, _j, _len, _len2, _ref, _ref2;
+  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, Bling, COLOR_BLING, COLOR_RING, Entity, Explosion, FPS, HP_BLING, HP_RING, MAX_SPEED_BLING, MAX_SPEED_RING, Projectile, Ring, Selector, arena, b, context, r, _i, _j, _len, _len2, _ref, _ref2;
   var __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
@@ -11,11 +11,13 @@
   ARENA_WIDTH = 640;
   ARENA_HEIGHT = 480;
   FPS = 40;
+  COLOR_RING = 'darkblue';
   HP_RING = 45;
   MAX_SPEED_RING = 10;
   ATTACK_RATE_RING = 30;
-  ATTACK_RANGE_RING = 80;
-  ATTACK_DAMAGE_RING = 60;
+  ATTACK_RANGE_RING = 800;
+  ATTACK_DAMAGE_RING = 10;
+  COLOR_BLING = 'lightgreen';
   HP_BLING = 35;
   MAX_SPEED_BLING = 5;
   ATTACK_RANGE_BLING = 20;
@@ -81,11 +83,12 @@
       this.hp = HP_BLING;
       this.max_speed = MAX_SPEED_BLING;
       this.frame_offset = ~~(Math.random() * 20);
-      this.color = 'lightgreen';
+      this.color = COLOR_BLING;
       this.target = false;
     }
     Bling.prototype.takeDamage = function(hp) {
       this.hp -= hp;
+      this.color = 'orange';
       if (this.hp <= 0) {
         return this.explode();
       }
@@ -109,6 +112,9 @@
       return _results;
     };
     Bling.prototype.animate = function() {
+      if (BvR.frame % 2 === 0) {
+        this.color = COLOR_BLING;
+      }
       if ((BvR.frame + this.frame_offset) % 40 === 3) {
         return this.radius = 6;
       } else if ((BvR.frame + this.frame_offset) % 40 === 37) {
@@ -122,6 +128,12 @@
       if (BvR.frame % ~~(FPS / 3) === 0) {
         return this.attackNearest();
       }
+    };
+    Bling.prototype.draw = function() {
+      Bling.__super__.draw.call(this);
+      context.strokeStyle = 'darkgreen';
+      context.lineWidth = 1;
+      return context.stroke();
     };
     Bling.prototype.explode = function() {
       var e;
@@ -158,7 +170,7 @@
       Ring.__super__.constructor.call(this, kwargs);
       this.hp = HP_RING;
       this.max_speed = MAX_SPEED_RING;
-      this.color = 'darkblue';
+      this.color = COLOR_RING;
     }
     Ring.prototype.checkNearbyEnemies = function() {
       var candidates, d2, e, i, p, target, x, y, _ref;
@@ -183,11 +195,15 @@
           target: target,
           damage: ATTACK_DAMAGE_RING
         });
-        return BvR.arena.addEntity(p);
+        BvR.arena.addEntity(p);
+        return this.color = 'yellow';
       }
     };
     Ring.prototype.mainLoop = function() {
       Ring.__super__.mainLoop.call(this);
+      if (BvR.frame % 2 === 0) {
+        this.color = COLOR_RING;
+      }
       if (!this.flags.moving && BvR.frame % ATTACK_RATE_RING === 0) {
         return this.checkNearbyEnemies();
       }
@@ -209,7 +225,7 @@
       this.damage = kwargs.damage;
       this.radius = 0;
       this.rate = 120 / FPS;
-      this.color = 'lightgreen';
+      this.color = COLOR_BLING;
       this.flags = {
         finished: false
       };

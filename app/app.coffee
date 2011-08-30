@@ -2,12 +2,14 @@ ARENA_WIDTH = 640
 ARENA_HEIGHT = 480
 FPS = 40
 
+COLOR_RING = 'darkblue'
 HP_RING = 45
 MAX_SPEED_RING = 10
 ATTACK_RATE_RING = 30
-ATTACK_RANGE_RING = 80
-ATTACK_DAMAGE_RING = 60
+ATTACK_RANGE_RING = 800
+ATTACK_DAMAGE_RING = 10
 
+COLOR_BLING = 'lightgreen'
 HP_BLING = 35
 MAX_SPEED_BLING = 5
 ATTACK_RANGE_BLING = 20
@@ -65,10 +67,11 @@ class Bling extends Entity
     @hp = HP_BLING
     @max_speed = MAX_SPEED_BLING
     @frame_offset = ~~(Math.random()*20)
-    @color = 'lightgreen'
+    @color = COLOR_BLING
     @target = false
   takeDamage: (hp) ->
     @hp -= hp
+    @color = 'orange'
     @explode() if @hp <= 0
   checkNearbyEnemies: ->
     for i,e of BvR.arena.entities
@@ -80,6 +83,7 @@ class Bling extends Entity
           @explode()
           break
   animate: ->
+    @color = COLOR_BLING if BvR.frame % 2 == 0
     if (BvR.frame + @frame_offset) % 40 == 3
       @radius = 6
     else if (BvR.frame + @frame_offset) % 40 == 37
@@ -89,6 +93,11 @@ class Bling extends Entity
     @animate()
     @checkNearbyEnemies()
     @attackNearest() if BvR.frame % ~~(FPS/3) == 0
+  draw: ->
+    super()
+    context.strokeStyle = 'darkgreen'
+    context.lineWidth = 1
+    context.stroke()
   explode: ->
     e = new Explosion
       position: @position
@@ -111,7 +120,7 @@ class Ring extends Entity
     super(kwargs)
     @hp = HP_RING
     @max_speed = MAX_SPEED_RING
-    @color = 'darkblue'
+    @color = COLOR_RING
   checkNearbyEnemies: ->
     candidates = []
     for i,e of BvR.arena.entities
@@ -129,8 +138,10 @@ class Ring extends Entity
         target: target
         damage: ATTACK_DAMAGE_RING
       BvR.arena.addEntity(p)
+      @color = 'yellow'
   mainLoop: ->
     super()
+    @color = COLOR_RING if BvR.frame % 2 == 0
     @checkNearbyEnemies() if not @flags.moving and BvR.frame % ATTACK_RATE_RING == 0
   takeDamage: (hp) ->
     console.log('Took ' + hp + ' damage')
@@ -146,7 +157,7 @@ class Explosion
     @damage = kwargs.damage
     @radius = 0
     @rate = 120/FPS
-    @color = 'lightgreen'
+    @color = COLOR_BLING
     @flags =
       finished: false
     @damageNearbyEnemies()
