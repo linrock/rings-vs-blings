@@ -3,8 +3,9 @@ ARENA_HEIGHT = 480
 FPS = 40
 
 MAX_SPEED_RING = 10
-MAX_SPEED_BLING = 100
+MAX_SPEED_BLING = 5
 
+ATTACK_RATE_RING = 30
 ATTACK_RANGE_RING = 80
 ATTACK_RANGE_BLING = 20
 
@@ -19,14 +20,14 @@ context = arena.getContext('2d')
 
 
 class Entity
-  constructor: ->
+  constructor: (kwargs) ->
     @radius = 6
     @flags =
       moving: false
       selected: false
       finished: false
     @max_speed = false
-    @position = false
+    @position = kwargs?.position or false
     @target_position = false
     @direction = false
   draw: ->
@@ -39,6 +40,8 @@ class Entity
       context.lineWidth = 3
       context.stroke()
     context.fill()
+  mainLoop: ->
+    @draw()
   calculateNewPosition: ->
     vector = [@target_position[0]-@position[0], @target_position[1]-@position[1]]
     m = Math.sqrt(Math.pow(vector[0],2)+Math.pow(vector[1],2))
@@ -56,12 +59,13 @@ class Entity
 
 
 class Bling extends Entity
-  constructor: ->
-    super()
+  constructor: (kwargs) ->
+    super(kwargs)
     @hp = 40
     @max_speed = MAX_SPEED_BLING
     @frame_offset = ~~(Math.random()*20)
     @color = 'lightgreen'
+    @target = false
   takeDamage: (hp) ->
     @hp -= hp
     @explode() if @hp <= 0
@@ -79,10 +83,11 @@ class Bling extends Entity
       @radius = 6
     else if (BvR.frame + @frame_offset) % 40 == 37
       @radius = 6.8
-  draw: ->
+  mainLoop: ->
     super()
     @animate()
     @checkNearbyEnemies()
+    @attackNearest() if BvR.frame % (FPS/2) == 0
   explode: ->
     e = new Explosion
       position: @position
@@ -90,11 +95,18 @@ class Bling extends Entity
       damage: ATTACK_DAMAGE_BLING
     BvR.arena.addEntity(e)
     @flags.finished = true
+  attackNearest: ->
+    unless @target
+      for i,e of BvR.arena.entities
+        if e instanceof Ring
+          @target = e
+          break
+    @move(@target.position)
 
 
 class Ring extends Entity
-  constructor: ->
-    super()
+  constructor: (kwargs) ->
+    super(kwargs)
     @hp = 45
     @max_speed = MAX_SPEED_RING
     @color = 'darkblue'
@@ -110,9 +122,9 @@ class Ring extends Entity
     if candidates.length > 0
       candidates.sort()
       BvR.arena.entities[candidates[0][1]].takeDamage(ATTACK_DAMAGE_RING)
-  draw: ->
+  mainLoop: ->
     super()
-    @checkNearbyEnemies() unless @flags.moving
+    @checkNearbyEnemies() if not @flags.moving and BvR.frame % ATTACK_RATE_RING == 0
   takeDamage: (hp) ->
     console.log('Took ' + hp + ' damage')
     @hp -= hp
@@ -141,6 +153,7 @@ class Explosion
       context.fill()
     else
       @flags.finished = true
+  mainLoop: -> @draw()
   damageNearbyEnemies: ->
     for i,e of BvR.arena.entities
       if e instanceof Ring
@@ -164,7 +177,7 @@ class Arena
         if e.flags?.finished
           delete @entities[i]
         else
-          e.draw()
+          e.mainLoop()
       BvR.frame++
     , 1000/FPS
   addEntity: (e) ->
@@ -204,6 +217,7 @@ class Selector
       context.rect(@start[0], @start[1], @end[0]-@start[0], @end[1]-@start[1])
       context.strokeStyle = 'black'
       context.stroke()
+  mainLoop: -> @draw()
   deselectAll: ->
     for i,e of BvR.arena.entities
       if e instanceof Ring
@@ -224,29 +238,13 @@ window.BvR =
   frame: 0
 
 
-r0 = new Ring()
-r0.position = [100,100]
-r0.draw()
-BvR.arena.addEntity(r0)
-
-r1 = new Ring()
-r1.position = [120,100]
-r1.draw()
-BvR.arena.addEntity(r1)
-
-
-b0 = new Bling()
-b0.position = [500,100]
-b0.draw()
-BvR.arena.addEntity(b0)
-
-b1 = new Bling()
-b1.position = [550,120]
-b1.draw()
-BvR.arena.addEntity(b1)
-
-b2 = new Bling()
-b2.position = [500,80]
-b2.draw()
-BvR.arena.addEntity(b2)
-
+BvR.arena.addEntity(r) for r in [
+  new Ring(position: [100,100]),
+  new Ring(position: [120,100])
+]
+BvR.arena.addEntity(b) for b in [
+  new Bling(position: [500,100]),
+  new Bling(position: [550,120]),
+  new Bling(position: [500,80])
+  new Bling(position: [530,70])
+]
