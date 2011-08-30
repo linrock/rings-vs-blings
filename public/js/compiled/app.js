@@ -1,5 +1,5 @@
 (function() {
-  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, Bling, Entity, Explosion, FPS, MAX_SPEED_BLING, MAX_SPEED_RING, Ring, Selector, arena, b, context, r, _i, _j, _len, _len2, _ref, _ref2;
+  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, Bling, Entity, Explosion, FPS, HP_BLING, HP_RING, MAX_SPEED_BLING, MAX_SPEED_RING, Ring, Selector, arena, b, context, r, _i, _j, _len, _len2, _ref, _ref2;
   var __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
@@ -11,12 +11,14 @@
   ARENA_WIDTH = 640;
   ARENA_HEIGHT = 480;
   FPS = 40;
+  HP_RING = 45;
   MAX_SPEED_RING = 10;
-  MAX_SPEED_BLING = 5;
   ATTACK_RATE_RING = 30;
   ATTACK_RANGE_RING = 80;
-  ATTACK_RANGE_BLING = 20;
   ATTACK_DAMAGE_RING = 6;
+  HP_BLING = 35;
+  MAX_SPEED_BLING = 5;
+  ATTACK_RANGE_BLING = 20;
   ATTACK_DAMAGE_BLING = 30;
   arena = document.getElementById('arena');
   arena.width = ARENA_WIDTH;
@@ -76,7 +78,7 @@
     __extends(Bling, Entity);
     function Bling(kwargs) {
       Bling.__super__.constructor.call(this, kwargs);
-      this.hp = 40;
+      this.hp = HP_BLING;
       this.max_speed = MAX_SPEED_BLING;
       this.frame_offset = ~~(Math.random() * 20);
       this.color = 'lightgreen';
@@ -117,7 +119,7 @@
       Bling.__super__.mainLoop.call(this);
       this.animate();
       this.checkNearbyEnemies();
-      if (BvR.frame % (FPS / 2) === 0) {
+      if (BvR.frame % ~~(FPS / 3) === 0) {
         return this.attackNearest();
       }
     };
@@ -133,17 +135,17 @@
     };
     Bling.prototype.attackNearest = function() {
       var e, i, _ref;
-      if (!this.target) {
+      if (!(this.target_id && BvR.arena.entities[this.target_id])) {
         _ref = BvR.arena.entities;
         for (i in _ref) {
           e = _ref[i];
           if (e instanceof Ring) {
-            this.target = e;
+            this.target_id = i;
             break;
           }
         }
       }
-      return this.move(this.target.position);
+      return this.move(BvR.arena.entities[this.target_id].position);
     };
     return Bling;
   })();
@@ -151,7 +153,7 @@
     __extends(Ring, Entity);
     function Ring(kwargs) {
       Ring.__super__.constructor.call(this, kwargs);
-      this.hp = 45;
+      this.hp = HP_RING;
       this.max_speed = MAX_SPEED_RING;
       this.color = 'darkblue';
     }
@@ -352,6 +354,8 @@
       position: [100, 100]
     }), new Ring({
       position: [120, 100]
+    }), new Ring({
+      position: [80, 70]
     })
   ];
   for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -367,6 +371,10 @@
       position: [500, 80]
     }), new Bling({
       position: [530, 70]
+    }), new Bling({
+      position: [450, 170]
+    }), new Bling({
+      position: [480, 200]
     })
   ];
   for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
