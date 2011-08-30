@@ -78,8 +78,8 @@ class Bling extends Entity
       if e instanceof Ring
         x = e.position[0]-@position[0]
         y = e.position[1]-@position[1]
-        d = Math.sqrt(Math.pow(x,2)+Math.pow(y,2))
-        if d < ATTACK_RANGE_BLING/2
+        d2 = Math.pow(x,2)+Math.pow(y,2)
+        if d2 < Math.pow(ATTACK_RANGE_BLING/2,2)
           @explode()
           break
   animate: ->
@@ -92,7 +92,7 @@ class Bling extends Entity
     super()
     @animate()
     @checkNearbyEnemies()
-    @attackNearest() if BvR.frame % ~~(FPS/3) == 0
+    @attackNearest() if BvR.frame % 5 == 0
   draw: ->
     super()
     context.strokeStyle = 'darkgreen'
@@ -107,10 +107,15 @@ class Bling extends Entity
     @flags.finished = true
   attackNearest: ->
     unless @target_id and BvR.arena.entities[@target_id]
+      candidates = []
       for i,e of BvR.arena.entities
         if e instanceof Ring
-          @target_id = i
-          break
+          x = e.position[0]-@position[0]
+          y = e.position[1]-@position[1]
+          d2 = Math.pow(x,2)+Math.pow(y,2)
+          candidates.push([d2,i])
+      candidates.sort()
+      @target_id = candidates[0][1]
     target = BvR.arena.entities[@target_id]
     @move(target.position) if target
 

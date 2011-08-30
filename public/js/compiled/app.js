@@ -94,7 +94,7 @@
       }
     };
     Bling.prototype.checkNearbyEnemies = function() {
-      var d, e, i, x, y, _ref, _results;
+      var d2, e, i, x, y, _ref, _results;
       _ref = BvR.arena.entities;
       _results = [];
       for (i in _ref) {
@@ -102,8 +102,8 @@
         if (e instanceof Ring) {
           x = e.position[0] - this.position[0];
           y = e.position[1] - this.position[1];
-          d = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-          if (d < ATTACK_RANGE_BLING / 2) {
+          d2 = Math.pow(x, 2) + Math.pow(y, 2);
+          if (d2 < Math.pow(ATTACK_RANGE_BLING / 2, 2)) {
             this.explode();
             break;
           }
@@ -125,7 +125,7 @@
       Bling.__super__.mainLoop.call(this);
       this.animate();
       this.checkNearbyEnemies();
-      if (BvR.frame % ~~(FPS / 3) === 0) {
+      if (BvR.frame % 5 === 0) {
         return this.attackNearest();
       }
     };
@@ -146,16 +146,21 @@
       return this.flags.finished = true;
     };
     Bling.prototype.attackNearest = function() {
-      var e, i, target, _ref;
+      var candidates, d2, e, i, target, x, y, _ref;
       if (!(this.target_id && BvR.arena.entities[this.target_id])) {
+        candidates = [];
         _ref = BvR.arena.entities;
         for (i in _ref) {
           e = _ref[i];
           if (e instanceof Ring) {
-            this.target_id = i;
-            break;
+            x = e.position[0] - this.position[0];
+            y = e.position[1] - this.position[1];
+            d2 = Math.pow(x, 2) + Math.pow(y, 2);
+            candidates.push([d2, i]);
           }
         }
+        candidates.sort();
+        this.target_id = candidates[0][1];
       }
       target = BvR.arena.entities[this.target_id];
       if (target) {
