@@ -40,6 +40,7 @@
       this.position = (kwargs != null ? kwargs.position : void 0) || false;
       this.target_position = false;
       this.direction = false;
+      this.frame_offset = ~~(Math.random() * 100);
     }
     Entity.prototype.draw = function() {
       if (this.flags.moving) {
@@ -108,7 +109,6 @@
       Bling.__super__.constructor.call(this, kwargs);
       this.hp = HP_BLING;
       this.max_speed = MAX_SPEED_BLING;
-      this.frame_offset = ~~(Math.random() * 20);
       this.color = COLOR_BLING;
       this.target = false;
     }
@@ -239,7 +239,7 @@
       if (BvR.frame % 2 === 0) {
         this.color = COLOR_RING;
       }
-      if (!this.flags.moving && BvR.frame % ATTACK_RATE_RING === 0) {
+      if (!this.flags.moving && (BvR.frame + this.frame_offset) % ATTACK_RATE_RING === 0) {
         return this.checkNearbyEnemies();
       }
     };
@@ -406,7 +406,7 @@
       generatePosition = __bind(function() {
         var e, i, position, x, y, _ref, _ref2;
         if (type === Bling) {
-          position = [400 + Math.random() * 200, 20 + Math.random() * 300];
+          position = [400 + Math.random() * 200, 250 + Math.random() * 200];
         } else {
           position = [20 + Math.random() * 100, 20 + Math.random() * 100];
         }
@@ -455,33 +455,35 @@
         x = e.x - arena.offsetLeft - arena.clientLeft;
         y = e.y - arena.offsetTop - arena.clientTop;
         position = [x, y];
-        if (e.button === 2) {
+        if (e.button === 0) {
+          return this.start = position;
+        } else if (e.button === 2) {
           _ref = BvR.arena.entities;
           _results = [];
           for (i in _ref) {
             e = _ref[i];
-            _results.push(e.flags.selected ? (e.move(position), e.flags.selected = false) : void 0);
+            _results.push(e.flags.selected ? e.move(position) : void 0);
           }
           return _results;
-        } else {
-          return this.start = position;
         }
       }, this);
       document.onmouseup = __bind(function(e) {
         var i, x, y, _ref, _results;
-        this.selectRegion(this.start, this.end);
-        x = e.x - arena.offsetLeft - arena.clientLeft;
-        y = e.y - arena.offsetTop - arena.clientTop;
-        _ref = BvR.arena.entities;
-        _results = [];
-        for (i in _ref) {
-          e = _ref[i];
-          if (e instanceof Ring && Math.pow(e.position[0] - x, 2) + Math.pow(e.position[1] - y, 2) < RADIUS_2) {
-            e.flags.selected = true;
-            break;
+        if (e.button === 0) {
+          this.selectRegion(this.start, this.end);
+          x = e.x - arena.offsetLeft - arena.clientLeft;
+          y = e.y - arena.offsetTop - arena.clientTop;
+          _ref = BvR.arena.entities;
+          _results = [];
+          for (i in _ref) {
+            e = _ref[i];
+            if (e instanceof Ring && Math.pow(e.position[0] - x, 2) + Math.pow(e.position[1] - y, 2) < RADIUS_2) {
+              e.flags.selected = true;
+              break;
+            }
           }
+          return _results;
         }
-        return _results;
       }, this);
       document.oncontextmenu = function() {
         return false;

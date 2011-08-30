@@ -35,6 +35,7 @@ class Entity
     @position = kwargs?.position or false
     @target_position = false
     @direction = false
+    @frame_offset = ~~(Math.random()*100)
   draw: ->
     @calculateNewPosition() if @flags.moving
     context.beginPath()
@@ -79,7 +80,6 @@ class Bling extends Entity
     super(kwargs)
     @hp = HP_BLING
     @max_speed = MAX_SPEED_BLING
-    @frame_offset = ~~(Math.random()*20)
     @color = COLOR_BLING
     @target = false
   takeDamage: (hp) ->
@@ -162,7 +162,7 @@ class Ring extends Entity
   mainLoop: ->
     super()
     @color = COLOR_RING if BvR.frame % 2 == 0
-    @checkNearbyEnemies() if not @flags.moving and BvR.frame % ATTACK_RATE_RING == 0
+    @checkNearbyEnemies() if not @flags.moving and (BvR.frame+@frame_offset) % ATTACK_RATE_RING == 0
   takeDamage: (hp) ->
     console.log('A ring took ' + hp + ' damage!')
     @hp -= hp
@@ -283,7 +283,7 @@ class Arena
   spawnEntity: (count, type = Bling) ->
     generatePosition = =>
       if type == Bling
-        position = [400+Math.random()*200, 20+Math.random()*300]
+        position = [400+Math.random()*200, 250+Math.random()*200]
       else
         position = [20+Math.random()*100, 20+Math.random()*100]
       for i,e of @entities
@@ -313,21 +313,21 @@ class Selector
       x = e.x-arena.offsetLeft-arena.clientLeft
       y = e.y-arena.offsetTop-arena.clientTop
       position = [x,y]
-      if e.button == 2
+      if e.button == 0
+        @start = position
+      else if e.button == 2
         for i,e of BvR.arena.entities
           if e.flags.selected
             e.move(position)
-            e.flags.selected = false
-      else
-        @start = position
     document.onmouseup = (e) =>
-      @selectRegion(@start, @end)
-      x = e.x-arena.offsetLeft-arena.clientLeft
-      y = e.y-arena.offsetTop-arena.clientTop
-      for i,e of BvR.arena.entities
-        if e instanceof Ring and Math.pow(e.position[0]-x,2) + Math.pow(e.position[1]-y,2) < RADIUS_2
-          e.flags.selected = true
-          break
+      if e.button == 0
+        @selectRegion(@start, @end)
+        x = e.x-arena.offsetLeft-arena.clientLeft
+        y = e.y-arena.offsetTop-arena.clientTop
+        for i,e of BvR.arena.entities
+          if e instanceof Ring and Math.pow(e.position[0]-x,2) + Math.pow(e.position[1]-y,2) < RADIUS_2
+            e.flags.selected = true
+            break
     document.oncontextmenu = -> false
     document.onkeydown = (e) =>
       @deselectAll() if e.keyCode == 27
