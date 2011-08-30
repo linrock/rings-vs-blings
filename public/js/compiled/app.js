@@ -56,7 +56,10 @@
       return context.fill();
     };
     Entity.prototype.mainLoop = function() {
-      return this.draw();
+      this.draw();
+      if (BvR.frame % 4 === 0) {
+        return this.detectCollisions();
+      }
     };
     Entity.prototype.calculateNewPosition = function() {
       var direction, m, vector;
@@ -76,7 +79,27 @@
       this.direction = [this.target_position[0] - this.position[0] > 0, this.target_position[1] - this.position[1] > 0];
       return this.flags.moving = true;
     };
-    Entity.prototype.detectCollisions = function() {};
+    Entity.prototype.detectCollisions = function() {
+      var e0, e1, i, j, x0, x1, y0, y1, _ref, _results;
+      _ref = BvR.arena.entities;
+      _results = [];
+      for (i in _ref) {
+        e0 = _ref[i];
+        _results.push((function() {
+          var _ref2, _ref3, _ref4, _results2;
+          if (e0 instanceof Ring || e0 instanceof Bling) {
+            _ref2 = BvR.arena.entities;
+            _results2 = [];
+            for (j in _ref2) {
+              e1 = _ref2[j];
+              _results2.push(i !== j && (e1 instanceof Ring || e1 instanceof Bling) ? ((_ref3 = e0.position, x0 = _ref3[0], y0 = _ref3[1], _ref3), (_ref4 = e1.position, x1 = _ref4[0], y1 = _ref4[1], _ref4), Math.pow(x1 - x0, 2) + Math.pow(y1 - y0, 2) < RADIUS_2 * 4 ? (e0.position = [e0.position[0] + 0.2 * Math.random() - 0.1, e0.position[1] + 0.2 * Math.random() - 0.1], e1.position = [e1.position[0] + 0.2 * Math.random() - 0.1, e1.position[1] + 0.2 * Math.random() - 0.1]) : void 0) : void 0);
+            }
+            return _results2;
+          }
+        })());
+      }
+      return _results;
+    };
     return Entity;
   })();
   Bling = (function() {
@@ -375,22 +398,34 @@
     Arena.prototype.addEntity = function(e) {
       return this.entities[this.counter++] = e;
     };
-    Arena.prototype.spawnBlings = function(count) {
-      var i, _results;
-      _results = [];
-      for (i = 1; 1 <= count ? i <= count : i >= count; 1 <= count ? i++ : i--) {
-        _results.push(this.addEntity(new Bling({
-          position: [400 + Math.random() * 200, 20 + Math.random() * 300]
-        })));
+    Arena.prototype.spawnEntity = function(count, type) {
+      var generatePosition, i, _results;
+      if (type == null) {
+        type = Bling;
       }
-      return _results;
-    };
-    Arena.prototype.spawnRings = function(count) {
-      var i, _results;
+      generatePosition = __bind(function() {
+        var e, i, position, x, y, _ref, _ref2;
+        if (type === Bling) {
+          position = [400 + Math.random() * 200, 20 + Math.random() * 300];
+        } else {
+          position = [20 + Math.random() * 100, 20 + Math.random() * 100];
+        }
+        _ref = this.entities;
+        for (i in _ref) {
+          e = _ref[i];
+          if (e instanceof type) {
+            _ref2 = e.position, x = _ref2[0], y = _ref2[1];
+            if (Math.pow(position[0] - x, 2) + Math.pow(position[1] - y, 2) < RADIUS_2 * 4) {
+              return generatePosition();
+            }
+          }
+        }
+        return position;
+      }, this);
       _results = [];
       for (i = 1; 1 <= count ? i <= count : i >= count; 1 <= count ? i++ : i--) {
-        _results.push(this.addEntity(new Ring({
-          position: [20 + Math.random() * 50, 20 + Math.random() * 100]
+        _results.push(this.addEntity(new type({
+          position: generatePosition()
         })));
       }
       return _results;
@@ -507,6 +542,6 @@
       wave: document.getElementById('wave-count')
     }
   };
-  BvR.arena.spawnRings(20);
-  BvR.arena.spawnBlings(20);
+  BvR.arena.spawnEntity(20, Ring);
+  BvR.arena.spawnEntity(20, Bling);
 }).call(this);

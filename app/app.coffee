@@ -47,6 +47,7 @@ class Entity
     context.fill()
   mainLoop: ->
     @draw()
+    @detectCollisions() if BvR.frame % 4 == 0
   calculateNewPosition: ->
     vector = [@target_position[0]-@position[0], @target_position[1]-@position[1]]
     m = Math.sqrt(Math.pow(vector[0],2)+Math.pow(vector[1],2))
@@ -62,7 +63,15 @@ class Entity
     @direction = [@target_position[0]-@position[0] > 0, @target_position[1]-@position[1] > 0]
     @flags.moving = true
   detectCollisions: ->
-      
+    for i,e0 of BvR.arena.entities
+      if e0 instanceof Ring or e0 instanceof Bling
+        for j,e1 of BvR.arena.entities
+          if i != j and (e1 instanceof Ring or e1 instanceof Bling)
+            [x0,y0] = e0.position
+            [x1,y1] = e1.position
+            if Math.pow(x1-x0,2)+Math.pow(y1-y0,2) < RADIUS_2*4
+              e0.position = [e0.position[0]+0.2*Math.random()-0.1, e0.position[1]+0.2*Math.random()-0.1]
+              e1.position = [e1.position[0]+0.2*Math.random()-0.1, e1.position[1]+0.2*Math.random()-0.1]
 
 
 class Bling extends Entity
@@ -271,12 +280,20 @@ class Arena
     , 1000/FPS
   addEntity: (e) ->
     @entities[@counter++] = e
-  spawnBlings: (count) ->
+  spawnEntity: (count, type = Bling) ->
+    generatePosition = =>
+      if type == Bling
+        position = [400+Math.random()*200, 20+Math.random()*300]
+      else
+        position = [20+Math.random()*100, 20+Math.random()*100]
+      for i,e of @entities
+        if e instanceof type
+          [x,y] = e.position
+          if Math.pow(position[0]-x,2)+Math.pow(position[1]-y,2) < RADIUS_2*4
+            return generatePosition()
+      position
     for i in [1..count]
-      @addEntity(new Bling(position: [400+Math.random()*200, 20+Math.random()*300]))
-  spawnRings: (count) ->
-    for i in [1..count]
-      @addEntity(new Ring(position: [20+Math.random()*50, 20+Math.random()*100]))
+      @addEntity(new type(position: generatePosition()))
   nextWave: ->
     BvR.selectors.wave.innerText = ++BvR.stats.wave
 
@@ -347,5 +364,5 @@ window.BvR =
     wave: document.getElementById('wave-count')
 
 
-BvR.arena.spawnRings(20)
-BvR.arena.spawnBlings(20)
+BvR.arena.spawnEntity(20, Ring)
+BvR.arena.spawnEntity(20, Bling)
