@@ -1,5 +1,7 @@
 ARENA_WIDTH = 640
 ARENA_HEIGHT = 480
+GRID_SIZE = 20
+
 FPS = 40
 RADIUS = 8
 RADIUS_2 = RADIUS*RADIUS
@@ -13,7 +15,7 @@ ATTACK_DAMAGE_RING = 6
 
 COLOR_BLING = 'lightgreen'
 HP_BLING = 35
-MAX_SPEED_BLING = 2.9531
+MAX_SPEED_BLING = 2.9531 # 2.5
 ATTACK_RANGE_BLING = 40
 ATTACK_DAMAGE_BLING = 30
 
@@ -48,7 +50,6 @@ class Entity
     context.fill()
   mainLoop: ->
     @draw()
-    @detectCollisions() if BvR.frame % 2 == 0
   calculateNewPosition: ->
     vector = [@target_position[0]-@position[0], @target_position[1]-@position[1]]
     m = Math.sqrt(Math.pow(vector[0],2)+Math.pow(vector[1],2))
@@ -63,16 +64,6 @@ class Entity
     @target_position = position
     @direction = [@target_position[0]-@position[0] > 0, @target_position[1]-@position[1] > 0]
     @flags.moving = true
-  detectCollisions: ->
-    for i,e0 of BvR.arena.entities
-      if e0 instanceof Ring or e0 instanceof Bling
-        for j,e1 of BvR.arena.entities
-          if j > i and e0.constructor == e1.constructor
-            [x0,y0] = e0.position
-            [x1,y1] = e1.position
-            if Math.pow(x1-x0,2)+Math.pow(y1-y0,2) <= RADIUS_2*4
-              e0.position = [x0+(x0-x1)*0.1, y0+(y0-y1)*0.1]
-              e1.position = [x1+(x1-x0)*0.1, y1+(y1-y0)*0.1]
 
 
 class Bling extends Entity
@@ -266,20 +257,25 @@ class Arena
   constructor: ->
     @entities = {}
     @counter = 0
-    @redrawLoop()
-  redrawLoop: ->
+    @mainLoop()
+  mainLoop: ->
     @interval = setInterval =>
       context.clearRect(0,0,ARENA_WIDTH,ARENA_HEIGHT)
       BvR.selector.draw()
       for i,e of @entities
         if e.flags?.finished
+          delete BvR.collisions.id_lookup[i]
           delete @entities[i]
         else
+          BvR.collisions.updateEntity(i, e.position) if e.flags?.moving?
+          BvR.collisions.handleCollisions(i)
           e.mainLoop()
       BvR.frame++
     , 1000/FPS
   addEntity: (e) ->
-    @entities[@counter++] = e
+    @entities[@counter] = e
+    BvR.collisions.updateEntity(@counter, e.position)
+    @counter++
   spawnEntity: (count, type = Bling) ->
     generatePosition = =>
       if type == Bling
@@ -352,9 +348,49 @@ class Selector
     @start = @end = false
 
 
+class CollisionGrid
+  constructor: ->
+    @grid_lookup = {}
+    @id_lookup = {}
+    @initializeLookupTable()
+  initializeLookupTable: ->
+    for x in [0..ARENA_WIDTH/GRID_SIZE-2]
+      for y in [0..ARENA_HEIGHT/GRID_SIZE-2]
+        @grid_lookup[[x,y]] = {}
+  updateEntity: (id, position) ->
+    x = [~~((position[0]-RADIUS)/GRID_SIZE), ~~((position[0]+RADIUS)/GRID_SIZE)]
+    x = [x[0]] if x[0] == x[1]
+    y = [~~((position[1]-RADIUS)/GRID_SIZE), ~~((position[1]+RADIUS)/GRID_SIZE)]
+    y = [y[0]] if y[0] == y[1]
+    for xy,junk of @id_lookup[id]
+      delete @grid_lookup[xy][id]
+    @id_lookup[id] = {}
+    for x0 in x
+      for y0 in y
+        @id_lookup[id][[x0,y0]] = true
+        @grid_lookup[[x0,y0]][id] = true
+  detectCollisions: (id) ->
+    position = BvR.arena.entities[id].position
+    collisions = {}
+    for xy,junk of @id_lookup[id]
+      for i,junk of @grid_lookup[xy]
+        if id+'' != i+''
+          break unless e = BvR.arena.entities[i]
+          p = e.position
+          if Math.pow(p[0]-position[0],2)+Math.pow(p[1]-position[1],2) < 4*RADIUS_2
+            collisions[i] = p
+    collisions
+  handleCollisions: (id) ->
+    e = BvR.arena.entities[id]
+    for i,position of @detectCollisions(id)
+      [x,y] = position
+      e.position = [e.position[0]+(e.position[0]-x)*0.05, e.position[1]+(e.position[1]-y)*0.05]
+
+
 window.BvR =
   arena: new Arena()
   selector: new Selector()
+  collisions: new CollisionGrid()
   frame: 0
   stats:
     kills: 0
