@@ -58,7 +58,7 @@
     };
     Entity.prototype.mainLoop = function() {
       this.draw();
-      if (BvR.frame % 4 === 0) {
+      if (BvR.frame % 2 === 0) {
         return this.detectCollisions();
       }
     };
@@ -93,7 +93,7 @@
             _results2 = [];
             for (j in _ref2) {
               e1 = _ref2[j];
-              _results2.push(i !== j && (e1 instanceof Ring || e1 instanceof Bling) ? ((_ref3 = e0.position, x0 = _ref3[0], y0 = _ref3[1], _ref3), (_ref4 = e1.position, x1 = _ref4[0], y1 = _ref4[1], _ref4), Math.pow(x1 - x0, 2) + Math.pow(y1 - y0, 2) < RADIUS_2 * 4 ? (e0.position = [e0.position[0] + 0.2 * Math.random() - 0.1, e0.position[1] + 0.2 * Math.random() - 0.1], e1.position = [e1.position[0] + 0.2 * Math.random() - 0.1, e1.position[1] + 0.2 * Math.random() - 0.1]) : void 0) : void 0);
+              _results2.push(j > i && e0.constructor === e1.constructor ? ((_ref3 = e0.position, x0 = _ref3[0], y0 = _ref3[1], _ref3), (_ref4 = e1.position, x1 = _ref4[0], y1 = _ref4[1], _ref4), Math.pow(x1 - x0, 2) + Math.pow(y1 - y0, 2) <= RADIUS_2 * 4 ? (e0.position = [x0 + (x0 - x1) * 0.1, y0 + (y0 - y1) * 0.1], e1.position = [x1 + (x1 - x0) * 0.1, y1 + (y1 - y0) * 0.1]) : void 0) : void 0);
             }
             return _results2;
           }
@@ -406,9 +406,9 @@
       generatePosition = __bind(function() {
         var e, i, position, x, y, _ref, _ref2;
         if (type === Bling) {
-          position = [400 + Math.random() * 200, 250 + Math.random() * 200];
+          position = [300 + Math.random() * 300, 150 + Math.random() * 300];
         } else {
-          position = [20 + Math.random() * 100, 20 + Math.random() * 100];
+          position = [20 + Math.random() * 150, 20 + Math.random() * 150];
         }
         _ref = this.entities;
         for (i in _ref) {
@@ -544,6 +544,6 @@
       wave: document.getElementById('wave-count')
     }
   };
-  BvR.arena.spawnEntity(20, Ring);
-  BvR.arena.spawnEntity(20, Bling);
+  BvR.arena.spawnEntity(30, Ring);
+  BvR.arena.spawnEntity(30, Bling);
 }).call(this);

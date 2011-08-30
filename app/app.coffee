@@ -48,7 +48,7 @@ class Entity
     context.fill()
   mainLoop: ->
     @draw()
-    @detectCollisions() if BvR.frame % 4 == 0
+    @detectCollisions() if BvR.frame % 2 == 0
   calculateNewPosition: ->
     vector = [@target_position[0]-@position[0], @target_position[1]-@position[1]]
     m = Math.sqrt(Math.pow(vector[0],2)+Math.pow(vector[1],2))
@@ -67,12 +67,12 @@ class Entity
     for i,e0 of BvR.arena.entities
       if e0 instanceof Ring or e0 instanceof Bling
         for j,e1 of BvR.arena.entities
-          if i != j and (e1 instanceof Ring or e1 instanceof Bling)
+          if j > i and e0.constructor == e1.constructor
             [x0,y0] = e0.position
             [x1,y1] = e1.position
-            if Math.pow(x1-x0,2)+Math.pow(y1-y0,2) < RADIUS_2*4
-              e0.position = [e0.position[0]+0.2*Math.random()-0.1, e0.position[1]+0.2*Math.random()-0.1]
-              e1.position = [e1.position[0]+0.2*Math.random()-0.1, e1.position[1]+0.2*Math.random()-0.1]
+            if Math.pow(x1-x0,2)+Math.pow(y1-y0,2) <= RADIUS_2*4
+              e0.position = [x0+(x0-x1)*0.1, y0+(y0-y1)*0.1]
+              e1.position = [x1+(x1-x0)*0.1, y1+(y1-y0)*0.1]
 
 
 class Bling extends Entity
@@ -283,9 +283,9 @@ class Arena
   spawnEntity: (count, type = Bling) ->
     generatePosition = =>
       if type == Bling
-        position = [400+Math.random()*200, 250+Math.random()*200]
+        position = [300+Math.random()*300, 150+Math.random()*300]
       else
-        position = [20+Math.random()*100, 20+Math.random()*100]
+        position = [20+Math.random()*150, 20+Math.random()*150]
       for i,e of @entities
         if e instanceof type
           [x,y] = e.position
@@ -364,5 +364,5 @@ window.BvR =
     wave: document.getElementById('wave-count')
 
 
-BvR.arena.spawnEntity(20, Ring)
-BvR.arena.spawnEntity(20, Bling)
+BvR.arena.spawnEntity(30, Ring)
+BvR.arena.spawnEntity(30, Bling)
