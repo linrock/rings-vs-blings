@@ -326,6 +326,8 @@ class Selector
       x = e.x-arena.offsetLeft-arena.clientLeft+window.pageXOffset
       y = e.y-arena.offsetTop-arena.clientTop+window.pageYOffset
       [x,y]
+    document.onselectstart = (e) ->
+      e.preventDefault()
     document.onmousemove = (e) =>
       @end = getOffsets(e) if @start
     document.onmousedown = (e) =>

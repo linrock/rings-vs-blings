@@ -475,6 +475,9 @@
         y = e.y - arena.offsetTop - arena.clientTop + window.pageYOffset;
         return [x, y];
       };
+      document.onselectstart = function(e) {
+        return e.preventDefault();
+      };
       document.onmousemove = __bind(function(e) {
         if (this.start) {
           return this.end = getOffsets(e);
