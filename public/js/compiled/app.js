@@ -71,13 +71,34 @@
         this.flags.moving = false;
         return this.direction = false;
       } else {
-        return this.position = [this.position[0] + vector[0], this.position[1] + vector[1]];
+        return this.setPosition([this.position[0] + vector[0], this.position[1] + vector[1]]);
       }
     };
     Entity.prototype.move = function(position) {
-      this.target_position = position;
+      this.setTargetPosition(position);
       this.direction = [this.target_position[0] - this.position[0] > 0, this.target_position[1] - this.position[1] > 0];
       return this.flags.moving = true;
+    };
+    Entity.prototype.boundedPosition = function(position) {
+      if (position[0] <= this.radius) {
+        position[0] = this.radius + Math.random() * 0.5;
+      }
+      if (position[0] >= ARENA_WIDTH - this.radius) {
+        position[0] = ARENA_WIDTH - this.radius;
+      }
+      if (position[1] <= this.radius) {
+        position[1] = this.radius + Math.random() * 0.5;
+      }
+      if (position[1] >= ARENA_HEIGHT - this.radius) {
+        position[1] = ARENA_HEIGHT - this.radius;
+      }
+      return position;
+    };
+    Entity.prototype.setTargetPosition = function(position) {
+      return this.target_position = this.boundedPosition(position);
+    };
+    Entity.prototype.setPosition = function(position) {
+      return this.position = this.boundedPosition(position);
     };
     return Entity;
   })();
@@ -356,7 +377,7 @@
     }
     Arena.prototype.mainLoop = function() {
       return this.interval = setInterval(__bind(function() {
-        var e, i, _ref, _ref2;
+        var e, i, _ref, _ref2, _ref3;
         context.clearRect(0, 0, ARENA_WIDTH, ARENA_HEIGHT);
         BvR.selector.draw();
         _ref = this.entities;
@@ -365,7 +386,9 @@
           if ((_ref2 = e.flags) != null ? _ref2.finished : void 0) {
             this.deleteEntity(i);
           } else {
-            BvR.collisions.updateEntity(i, e.position);
+            if ((_ref3 = e.flags) != null ? _ref3.collides : void 0) {
+              BvR.collisions.updateEntity(i, e.position);
+            }
             BvR.collisions.handleCollisions(i);
             e.mainLoop();
           }
@@ -606,7 +629,7 @@
       for (i in _ref) {
         position = _ref[i];
         offset = [(e0.position[0] - position[0]) * 0.1, (e0.position[1] - position[1]) * 0.1];
-        _results.push(e0.position = [e0.position[0] + offset[0], e0.position[1] + offset[1]]);
+        _results.push(e0.setPosition([e0.position[0] + offset[0], e0.position[1] + offset[1]]));
       }
       return _results;
     };

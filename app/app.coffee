@@ -60,11 +60,21 @@ class Entity
       @flags.moving = false
       @direction = false
     else
-      @position = [@position[0]+vector[0], @position[1]+vector[1]]
+      @setPosition([@position[0]+vector[0], @position[1]+vector[1]])
   move: (position) ->
-    @target_position = position
+    @setTargetPosition(position)
     @direction = [@target_position[0]-@position[0] > 0, @target_position[1]-@position[1] > 0]
     @flags.moving = true
+  boundedPosition: (position) ->
+    position[0] = @radius+Math.random()*0.5 if position[0] <= @radius
+    position[0] = ARENA_WIDTH-@radius if position[0] >= ARENA_WIDTH-@radius
+    position[1] = @radius+Math.random()*0.5 if position[1] <= @radius
+    position[1] = ARENA_HEIGHT-@radius if position[1] >= ARENA_HEIGHT-@radius
+    position
+  setTargetPosition: (position) ->
+    @target_position = @boundedPosition(position)
+  setPosition: (position) ->
+    @position = @boundedPosition(position)
 
 
 class Bling extends Entity
@@ -266,7 +276,7 @@ class Arena
         if e.flags?.finished
           @deleteEntity(i)
         else
-          BvR.collisions.updateEntity(i, e.position)
+          BvR.collisions.updateEntity(i, e.position) if e.flags?.collides
           BvR.collisions.handleCollisions(i)
           e.mainLoop()
       BvR.frame++
@@ -389,7 +399,7 @@ class CollisionGrid
     e0 = BvR.arena.entities[id]
     for i,position of @detectCollisions(id)
       offset = [(e0.position[0]-position[0])*0.1, (e0.position[1]-position[1])*0.1]
-      e0.position = [e0.position[0]+offset[0], e0.position[1]+offset[1]]
+      e0.setPosition([e0.position[0]+offset[0], e0.position[1]+offset[1]])
 
 
 
