@@ -37,12 +37,12 @@ class Entity
       collides: true
       selectable: false
     @max_speed = false
+    @move_queue = []
     @position = kwargs?.position or false
     @target_position = false
     @direction = false
     @frame_offset = ~~(Math.random()*100)
   draw: ->
-    @calculateNewPosition() if @flags.moving
     context.beginPath()
     context.arc(@position[0], @position[1], @radius, 2*Math.PI, false)
     context.fillStyle = @color
@@ -52,21 +52,28 @@ class Entity
       context.stroke()
     context.fill()
   mainLoop: ->
+    @calculateNewPosition() if @flags.moving or @move_queue.length > 0
     @draw()
   calculateNewPosition: ->
-    vector = [@target_position[0]-@position[0], @target_position[1]-@position[1]]
-    m = Math.sqrt(Math.pow(vector[0],2)+Math.pow(vector[1],2))
-    vector = [vector[0]*@max_speed/m, vector[1]*@max_speed/m]
-    direction = [vector[0] > 0, vector[1] > 0]
-    if direction[0] != @direction[0] or direction[1] != @direction[1]
-      @flags.moving = false
-      @direction = false
+    if @move_queue.length > 0 and @flags.moving == false
+      @move(@move_queue.shift())
     else
-      @setPosition([@position[0]+vector[0], @position[1]+vector[1]])
-  move: (position) ->
-    @setTargetPosition(position)
-    @direction = [@target_position[0]-@position[0] > 0, @target_position[1]-@position[1] > 0]
-    @flags.moving = true
+      vector = [@target_position[0]-@position[0], @target_position[1]-@position[1]]
+      m = Math.sqrt(Math.pow(vector[0],2)+Math.pow(vector[1],2))
+      vector = [vector[0]*@max_speed/m, vector[1]*@max_speed/m]
+      direction = [vector[0] > 0, vector[1] > 0]
+      if direction[0] != @direction[0] or direction[1] != @direction[1]
+        @flags.moving = false
+        @direction = false
+      else
+        @setPosition([@position[0]+vector[0], @position[1]+vector[1]])
+  move: (position, queue = false) ->
+    if queue
+      @move_queue.push(@boundedPosition(position))
+    else
+      @setTargetPosition(position)
+      @direction = [@target_position[0]-@position[0] > 0, @target_position[1]-@position[1] > 0]
+      @flags.moving = true
   boundedPosition: (position) ->
     position[0] = @radius+Math.random()*0.5 if position[0] <= @radius
     position[0] = ARENA_WIDTH-@radius if position[0] >= ARENA_WIDTH-@radius
@@ -326,8 +333,12 @@ class Selector
       if e.button == 0
         @start = position
       else if e.button == 2
-        for i,e of BvR.arena.entities
-          e.move(position) if e.flags.selected
+        for i,entity of BvR.arena.entities
+          if entity.flags.selected
+            if e.shiftKey
+              entity.move(position, true)
+            else
+              entity.move(position)
     document.onmouseup = (e) =>
       if e.button == 0
         @selectRegion(@start, @end)
@@ -348,13 +359,13 @@ class Selector
   mainLoop: -> @draw()
   deselectAll: ->
     for i,e of BvR.arena.entities
-      if e instanceof Ring
+      if e.properties?.selectable
         e.flags.selected = false
   selectRegion: (start, end) ->
     xs = if start[0]<end[0] then [start[0],end[0]] else [end[0],start[0]]
     ys = if start[1]<end[1] then [start[1],end[1]] else [end[1],start[1]]
     for i,e of BvR.arena.entities
-      if e instanceof Ring
+      if e.properties?.selectable
         [x,y] = e.position
         e.flags.selected = xs[0] < x < xs[1] and ys[0] < y < ys[1]
     @start = @end = false
@@ -417,4 +428,4 @@ window.BvR =
 
 
 BvR.arena.spawnEntity(30, Ring)
-BvR.arena.spawnEntity(20, Bling)
+# BvR.arena.spawnEntity(20, Bling)

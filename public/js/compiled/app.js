@@ -42,15 +42,13 @@
         selectable: false
       };
       this.max_speed = false;
+      this.move_queue = [];
       this.position = (kwargs != null ? kwargs.position : void 0) || false;
       this.target_position = false;
       this.direction = false;
       this.frame_offset = ~~(Math.random() * 100);
     }
     Entity.prototype.draw = function() {
-      if (this.flags.moving) {
-        this.calculateNewPosition();
-      }
       context.beginPath();
       context.arc(this.position[0], this.position[1], this.radius, 2 * Math.PI, false);
       context.fillStyle = this.color;
@@ -62,25 +60,39 @@
       return context.fill();
     };
     Entity.prototype.mainLoop = function() {
+      if (this.flags.moving || this.move_queue.length > 0) {
+        this.calculateNewPosition();
+      }
       return this.draw();
     };
     Entity.prototype.calculateNewPosition = function() {
       var direction, m, vector;
-      vector = [this.target_position[0] - this.position[0], this.target_position[1] - this.position[1]];
-      m = Math.sqrt(Math.pow(vector[0], 2) + Math.pow(vector[1], 2));
-      vector = [vector[0] * this.max_speed / m, vector[1] * this.max_speed / m];
-      direction = [vector[0] > 0, vector[1] > 0];
-      if (direction[0] !== this.direction[0] || direction[1] !== this.direction[1]) {
-        this.flags.moving = false;
-        return this.direction = false;
+      if (this.move_queue.length > 0 && this.flags.moving === false) {
+        return this.move(this.move_queue.shift());
       } else {
-        return this.setPosition([this.position[0] + vector[0], this.position[1] + vector[1]]);
+        vector = [this.target_position[0] - this.position[0], this.target_position[1] - this.position[1]];
+        m = Math.sqrt(Math.pow(vector[0], 2) + Math.pow(vector[1], 2));
+        vector = [vector[0] * this.max_speed / m, vector[1] * this.max_speed / m];
+        direction = [vector[0] > 0, vector[1] > 0];
+        if (direction[0] !== this.direction[0] || direction[1] !== this.direction[1]) {
+          this.flags.moving = false;
+          return this.direction = false;
+        } else {
+          return this.setPosition([this.position[0] + vector[0], this.position[1] + vector[1]]);
+        }
       }
     };
-    Entity.prototype.move = function(position) {
-      this.setTargetPosition(position);
-      this.direction = [this.target_position[0] - this.position[0] > 0, this.target_position[1] - this.position[1] > 0];
-      return this.flags.moving = true;
+    Entity.prototype.move = function(position, queue) {
+      if (queue == null) {
+        queue = false;
+      }
+      if (queue) {
+        return this.move_queue.push(this.boundedPosition(position));
+      } else {
+        this.setTargetPosition(position);
+        this.direction = [this.target_position[0] - this.position[0] > 0, this.target_position[1] - this.position[1] > 0];
+        return this.flags.moving = true;
+      }
     };
     Entity.prototype.boundedPosition = function(position) {
       if (position[0] <= this.radius) {
@@ -469,7 +481,7 @@
         }
       }, this);
       document.onmousedown = __bind(function(e) {
-        var i, position, _ref, _results;
+        var entity, i, position, _ref, _results;
         position = getOffsets(e);
         if (e.button === 0) {
           return this.start = position;
@@ -477,8 +489,8 @@
           _ref = BvR.arena.entities;
           _results = [];
           for (i in _ref) {
-            e = _ref[i];
-            _results.push(e.flags.selected ? e.move(position) : void 0);
+            entity = _ref[i];
+            _results.push(entity.flags.selected ? e.shiftKey ? entity.move(position, true) : entity.move(position) : void 0);
           }
           return _results;
         }
@@ -521,24 +533,24 @@
       return this.draw();
     };
     Selector.prototype.deselectAll = function() {
-      var e, i, _ref, _results;
+      var e, i, _ref, _ref2, _results;
       _ref = BvR.arena.entities;
       _results = [];
       for (i in _ref) {
         e = _ref[i];
-        _results.push(e instanceof Ring ? e.flags.selected = false : void 0);
+        _results.push(((_ref2 = e.properties) != null ? _ref2.selectable : void 0) ? e.flags.selected = false : void 0);
       }
       return _results;
     };
     Selector.prototype.selectRegion = function(start, end) {
-      var e, i, x, xs, y, ys, _ref, _ref2;
+      var e, i, x, xs, y, ys, _ref, _ref2, _ref3;
       xs = start[0] < end[0] ? [start[0], end[0]] : [end[0], start[0]];
       ys = start[1] < end[1] ? [start[1], end[1]] : [end[1], start[1]];
       _ref = BvR.arena.entities;
       for (i in _ref) {
         e = _ref[i];
-        if (e instanceof Ring) {
-          _ref2 = e.position, x = _ref2[0], y = _ref2[1];
+        if ((_ref2 = e.properties) != null ? _ref2.selectable : void 0) {
+          _ref3 = e.position, x = _ref3[0], y = _ref3[1];
           e.flags.selected = (xs[0] < x && x < xs[1]) && (ys[0] < y && y < ys[1]);
         }
       }
@@ -655,5 +667,4 @@
     }
   };
   BvR.arena.spawnEntity(30, Ring);
-  BvR.arena.spawnEntity(20, Bling);
 }).call(this);
