@@ -350,24 +350,22 @@
   Arena = (function() {
     function Arena() {
       this.entities = {};
+      this.interval = false;
       this.counter = 0;
       this.mainLoop();
     }
     Arena.prototype.mainLoop = function() {
       return this.interval = setInterval(__bind(function() {
-        var e, i, _ref, _ref2, _ref3;
+        var e, i, _ref, _ref2;
         context.clearRect(0, 0, ARENA_WIDTH, ARENA_HEIGHT);
         BvR.selector.draw();
         _ref = this.entities;
         for (i in _ref) {
           e = _ref[i];
           if ((_ref2 = e.flags) != null ? _ref2.finished : void 0) {
-            delete BvR.collisions.id_lookup[i];
             this.deleteEntity(i);
           } else {
-            if (((_ref3 = e.flags) != null ? _ref3.moving : void 0) != null) {
-              BvR.collisions.updateEntity(i, e.position);
-            }
+            BvR.collisions.updateEntity(i, e.position);
             BvR.collisions.handleCollisions(i);
             e.mainLoop();
           }
@@ -384,6 +382,7 @@
       return this.counter++;
     };
     Arena.prototype.deleteEntity = function(id) {
+      delete BvR.collisions.id_lookup[id];
       return delete this.entities[id];
     };
     Arena.prototype.spawnEntity = function(count, type) {
@@ -600,14 +599,14 @@
       return collisions;
     };
     CollisionGrid.prototype.handleCollisions = function(id) {
-      var e, i, position, x, y, _ref, _results;
-      e = BvR.arena.entities[id];
+      var e0, i, offset, position, _ref, _results;
+      e0 = BvR.arena.entities[id];
       _ref = this.detectCollisions(id);
       _results = [];
       for (i in _ref) {
         position = _ref[i];
-        x = position[0], y = position[1];
-        _results.push(e.position = [e.position[0] + (e.position[0] - x) * 0.08, e.position[1] + (e.position[1] - y) * 0.08]);
+        offset = [(e0.position[0] - position[0]) * 0.1, (e0.position[1] - position[1]) * 0.1];
+        _results.push(e0.position = [e0.position[0] + offset[0], e0.position[1] + offset[1]]);
       }
       return _results;
     };

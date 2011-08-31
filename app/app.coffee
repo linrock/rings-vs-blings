@@ -255,6 +255,7 @@ class Projectile
 class Arena
   constructor: ->
     @entities = {}
+    @interval = false
     @counter = 0
     @mainLoop()
   mainLoop: ->
@@ -263,10 +264,9 @@ class Arena
       BvR.selector.draw()
       for i,e of @entities
         if e.flags?.finished
-          delete BvR.collisions.id_lookup[i]
           @deleteEntity(i)
         else
-          BvR.collisions.updateEntity(i, e.position) if e.flags?.moving?
+          BvR.collisions.updateEntity(i, e.position)
           BvR.collisions.handleCollisions(i)
           e.mainLoop()
       BvR.frame++
@@ -276,6 +276,7 @@ class Arena
     BvR.collisions.updateEntity(@counter, e.position) if e.flags?.collides
     @counter++
   deleteEntity: (id) ->
+    delete BvR.collisions.id_lookup[id]
     delete @entities[id]
   spawnEntity: (count, type = Bling) ->
     generatePosition = =>
@@ -385,10 +386,11 @@ class CollisionGrid
             BvR.arena.deleteEntity(i)
     collisions
   handleCollisions: (id) ->
-    e = BvR.arena.entities[id]
+    e0 = BvR.arena.entities[id]
     for i,position of @detectCollisions(id)
-      [x,y] = position
-      e.position = [e.position[0]+(e.position[0]-x)*0.08, e.position[1]+(e.position[1]-y)*0.08]
+      offset = [(e0.position[0]-position[0])*0.1, (e0.position[1]-position[1])*0.1]
+      e0.position = [e0.position[0]+offset[0], e0.position[1]+offset[1]]
+
 
 
 window.BvR =
