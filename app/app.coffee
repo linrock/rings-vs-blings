@@ -316,6 +316,23 @@ class Arena
     BvR.selectors.wave.innerText = ++BvR.stats.wave
 
 
+class DirectionIndicator
+  constructor: ->
+    @properties =
+      visible: false
+      collides: false
+      selectable: false
+    @begin = false
+    @end = false
+  mainLoop: -> @draw()
+  draw: ->
+    if @begin and @end
+      context.moveTo(@begin)
+      context.lineTo(@end)
+      context.strokeStyle = 'green'
+      context.stroke()
+
+
 class Selector
   constructor: ->
     @start = false

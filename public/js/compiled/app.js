@@ -1,5 +1,5 @@
 (function() {
-  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, Bling, COLOR_BLING, COLOR_RING, CollisionGrid, Entity, Explosion, FPS, FadeAway, GRID_SIZE, HP_BLING, HP_RING, MAX_SPEED_BLING, MAX_SPEED_RING, Projectile, RADIUS, RADIUS_2, Ring, Selector, arena, context;
+  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, Bling, COLOR_BLING, COLOR_RING, CollisionGrid, DirectionIndicator, Entity, Explosion, FPS, FadeAway, GRID_SIZE, HP_BLING, HP_RING, MAX_SPEED_BLING, MAX_SPEED_RING, Projectile, RADIUS, RADIUS_2, Ring, Selector, arena, context;
   var __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
@@ -460,6 +460,29 @@
       return BvR.selectors.wave.innerText = ++BvR.stats.wave;
     };
     return Arena;
+  })();
+  DirectionIndicator = (function() {
+    function DirectionIndicator() {
+      this.properties = {
+        visible: false,
+        collides: false,
+        selectable: false
+      };
+      this.begin = false;
+      this.end = false;
+    }
+    DirectionIndicator.prototype.mainLoop = function() {
+      return this.draw();
+    };
+    DirectionIndicator.prototype.draw = function() {
+      if (this.begin && this.end) {
+        context.moveTo(this.begin);
+        context.lineTo(this.end);
+        context.strokeStyle = 'green';
+        return context.stroke();
+      }
+    };
+    return DirectionIndicator;
   })();
   Selector = (function() {
     function Selector() {
