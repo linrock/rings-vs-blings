@@ -12,19 +12,19 @@
   ARENA_HEIGHT = 480;
   GRID_SIZE = 20;
   FPS = 40;
-  RADIUS = 8;
+  RADIUS = 9;
   RADIUS_2 = RADIUS * RADIUS;
   COLOR_RING = 'darkblue';
   HP_RING = 45;
   MAX_SPEED_RING = 2.25;
-  ATTACK_RATE_RING = ~~(0.8608 * 40);
+  ATTACK_RATE_RING = ~~(0.8608 * FPS);
   ATTACK_RANGE_RING = 200;
   ATTACK_DAMAGE_RING = 6;
-  COLOR_BLING = 'lightgreen';
-  HP_BLING = 35;
+  COLOR_BLING = '#66ff00';
+  HP_BLING = 30;
   MAX_SPEED_BLING = 2.9531;
   ATTACK_RANGE_BLING = 40;
-  ATTACK_DAMAGE_BLING = 30;
+  ATTACK_DAMAGE_BLING = 35;
   arena = document.getElementById('arena');
   arena.width = ARENA_WIDTH;
   arena.height = ARENA_HEIGHT;
@@ -160,7 +160,7 @@
         case 3:
           return this.radius = RADIUS;
         case 37:
-          return this.radius = RADIUS + 1;
+          return this.radius = RADIUS + 1.2;
       }
     };
     Bling.prototype.mainLoop = function() {
@@ -551,7 +551,7 @@
       if (this.start && this.end) {
         context.beginPath();
         context.rect(this.start[0], this.start[1], this.end[0] - this.start[0], this.end[1] - this.start[1]);
-        context.strokeStyle = 'black';
+        context.strokeStyle = 'green';
         return context.stroke();
       }
     };
@@ -693,4 +693,5 @@
     }
   };
   BvR.arena.spawnEntity(30, Ring);
+  BvR.arena.spawnEntity(20, Bling);
 }).call(this);

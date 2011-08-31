@@ -3,21 +3,21 @@ ARENA_HEIGHT = 480
 GRID_SIZE = 20
 
 FPS = 40
-RADIUS = 8
+RADIUS = 9
 RADIUS_2 = RADIUS*RADIUS
 
 COLOR_RING = 'darkblue'
 HP_RING = 45
 MAX_SPEED_RING = 2.25
-ATTACK_RATE_RING = ~~(0.8608*40)
+ATTACK_RATE_RING = ~~(0.8608*FPS)
 ATTACK_RANGE_RING = 200
 ATTACK_DAMAGE_RING = 6
 
-COLOR_BLING = 'lightgreen'
-HP_BLING = 35
+COLOR_BLING = '#66ff00'
+HP_BLING = 30
 MAX_SPEED_BLING = 2.9531 # 2.5
 ATTACK_RANGE_BLING = 40
-ATTACK_DAMAGE_BLING = 30
+ATTACK_DAMAGE_BLING = 35
 
 
 arena = document.getElementById('arena')
@@ -112,7 +112,7 @@ class Bling extends Entity
     @color = COLOR_BLING if BvR.frame % 2 == 0
     switch (BvR.frame + @frame_offset) % 40
       when 3 then @radius = RADIUS
-      when 37 then @radius = RADIUS+1
+      when 37 then @radius = RADIUS+1.2
   mainLoop: ->
     super()
     @animate()
@@ -373,7 +373,7 @@ class Selector
     if @start and @end
       context.beginPath()
       context.rect(@start[0], @start[1], @end[0]-@start[0], @end[1]-@start[1])
-      context.strokeStyle = 'black'
+      context.strokeStyle = 'green'
       context.stroke()
   mainLoop: -> @draw()
   deselectAll: ->
@@ -447,4 +447,4 @@ window.BvR =
 
 
 BvR.arena.spawnEntity(30, Ring)
-# BvR.arena.spawnEntity(20, Bling)
+BvR.arena.spawnEntity(20, Bling)
