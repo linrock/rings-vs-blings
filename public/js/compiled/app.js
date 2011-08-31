@@ -35,6 +35,7 @@
       this.flags = {
         moving: false,
         selected: false,
+        collides: true,
         finished: false
       };
       this.max_speed = false;
@@ -169,8 +170,7 @@
           this.target_id = candidates[0][1];
         }
       }
-      target = BvR.arena.entities[this.target_id];
-      if (target) {
+      if (target = BvR.arena.entities[this.target_id]) {
         return this.move(target.position);
       }
     };
@@ -221,9 +221,7 @@
       }
     };
     Ring.prototype.takeDamage = function(hp) {
-      console.log('A ring took ' + hp + ' damage!');
-      this.hp -= hp;
-      if (this.hp <= 0) {
+      if (this.hp -= hp <= 0) {
         return this.destroy();
       }
     };
@@ -365,7 +363,7 @@
           e = _ref[i];
           if ((_ref2 = e.flags) != null ? _ref2.finished : void 0) {
             delete BvR.collisions.id_lookup[i];
-            delete this.entities[i];
+            this.deleteEntity(i);
           } else {
             if (((_ref3 = e.flags) != null ? _ref3.moving : void 0) != null) {
               BvR.collisions.updateEntity(i, e.position);
@@ -378,9 +376,15 @@
       }, this), 1000 / FPS);
     };
     Arena.prototype.addEntity = function(e) {
+      var _ref;
       this.entities[this.counter] = e;
-      BvR.collisions.updateEntity(this.counter, e.position);
+      if ((_ref = e.flags) != null ? _ref.collides : void 0) {
+        BvR.collisions.updateEntity(this.counter, e.position);
+      }
       return this.counter++;
+    };
+    Arena.prototype.deleteEntity = function(id) {
+      return delete this.entities[id];
     };
     Arena.prototype.spawnEntity = function(count, type) {
       var generatePosition, i, _results;
@@ -538,6 +542,9 @@
     };
     CollisionGrid.prototype.updateEntity = function(id, position) {
       var junk, x, x0, xy, y, y0, _i, _len, _ref, _results;
+      if (!(id && position)) {
+        return;
+      }
       x = [~~((position[0] - RADIUS) / GRID_SIZE), ~~((position[0] + RADIUS) / GRID_SIZE)];
       if (x[0] === x[1]) {
         x = [x[0]];
@@ -569,22 +576,23 @@
       return _results;
     };
     CollisionGrid.prototype.detectCollisions = function(id) {
-      var collisions, e, i, junk, p, position, xy, _ref, _ref2;
-      position = BvR.arena.entities[id].position;
+      var collisions, e, i, junk, p, x, xy, y, _ref, _ref2, _ref3;
+      _ref = BvR.arena.entities[id].position, x = _ref[0], y = _ref[1];
       collisions = {};
-      _ref = this.id_lookup[id];
-      for (xy in _ref) {
-        junk = _ref[xy];
-        _ref2 = this.grid_lookup[xy];
-        for (i in _ref2) {
-          junk = _ref2[i];
-          if (id + '' !== i + '') {
-            if (!(e = BvR.arena.entities[i])) {
-              break;
-            }
-            p = e.position;
-            if (Math.pow(p[0] - position[0], 2) + Math.pow(p[1] - position[1], 2) < 4 * RADIUS_2) {
-              collisions[i] = p;
+      _ref2 = this.id_lookup[id];
+      for (xy in _ref2) {
+        junk = _ref2[xy];
+        _ref3 = this.grid_lookup[xy];
+        for (i in _ref3) {
+          junk = _ref3[i];
+          if (i + '' !== id + '') {
+            if (e = BvR.arena.entities[i]) {
+              p = e.position;
+              if (Math.pow(p[0] - x, 2) + Math.pow(p[1] - y, 2) <= 4 * RADIUS_2) {
+                collisions[i] = p;
+              }
+            } else {
+              BvR.arena.deleteEntity(i);
             }
           }
         }
@@ -599,7 +607,7 @@
       for (i in _ref) {
         position = _ref[i];
         x = position[0], y = position[1];
-        _results.push(e.position = [e.position[0] + (e.position[0] - x) * 0.05, e.position[1] + (e.position[1] - y) * 0.05]);
+        _results.push(e.position = [e.position[0] + (e.position[0] - x) * 0.08, e.position[1] + (e.position[1] - y) * 0.08]);
       }
       return _results;
     };

@@ -32,6 +32,7 @@ class Entity
     @flags =
       moving: false
       selected: false
+      collides: true
       finished: false
     @max_speed = false
     @position = kwargs?.position or false
@@ -122,8 +123,8 @@ class Bling extends Entity
       if candidates.length > 0
         candidates.sort()
         @target_id = candidates[0][1]
-    target = BvR.arena.entities[@target_id]
-    @move(target.position) if target
+    if target = BvR.arena.entities[@target_id]
+      @move(target.position)
 
 
 class Ring extends Entity
@@ -155,9 +156,7 @@ class Ring extends Entity
     @color = COLOR_RING if BvR.frame % 2 == 0
     @checkNearbyEnemies() if not @flags.moving and (BvR.frame+@frame_offset) % ATTACK_RATE_RING == 0
   takeDamage: (hp) ->
-    console.log('A ring took ' + hp + ' damage!')
-    @hp -= hp
-    @destroy() if @hp <= 0
+    @destroy() if @hp -= hp <= 0
   destroy: ->
     unless @flags.finished
       f = new FadeAway(position: @position, radius: @radius)
@@ -265,7 +264,7 @@ class Arena
       for i,e of @entities
         if e.flags?.finished
           delete BvR.collisions.id_lookup[i]
-          delete @entities[i]
+          @deleteEntity(i)
         else
           BvR.collisions.updateEntity(i, e.position) if e.flags?.moving?
           BvR.collisions.handleCollisions(i)
@@ -274,8 +273,10 @@ class Arena
     , 1000/FPS
   addEntity: (e) ->
     @entities[@counter] = e
-    BvR.collisions.updateEntity(@counter, e.position)
+    BvR.collisions.updateEntity(@counter, e.position) if e.flags?.collides
     @counter++
+  deleteEntity: (id) ->
+    delete @entities[id]
   spawnEntity: (count, type = Bling) ->
     generatePosition = =>
       if type == Bling
@@ -358,6 +359,7 @@ class CollisionGrid
       for y in [0..ARENA_HEIGHT/GRID_SIZE-2]
         @grid_lookup[[x,y]] = {}
   updateEntity: (id, position) ->
+    return unless id and position
     x = [~~((position[0]-RADIUS)/GRID_SIZE), ~~((position[0]+RADIUS)/GRID_SIZE)]
     x = [x[0]] if x[0] == x[1]
     y = [~~((position[1]-RADIUS)/GRID_SIZE), ~~((position[1]+RADIUS)/GRID_SIZE)]
@@ -370,21 +372,23 @@ class CollisionGrid
         @id_lookup[id][[x0,y0]] = true
         @grid_lookup[[x0,y0]][id] = true
   detectCollisions: (id) ->
-    position = BvR.arena.entities[id].position
+    [x,y] = BvR.arena.entities[id].position
     collisions = {}
     for xy,junk of @id_lookup[id]
       for i,junk of @grid_lookup[xy]
-        if id+'' != i+''
-          break unless e = BvR.arena.entities[i]
-          p = e.position
-          if Math.pow(p[0]-position[0],2)+Math.pow(p[1]-position[1],2) < 4*RADIUS_2
-            collisions[i] = p
+        if i+'' != id+''
+          if e = BvR.arena.entities[i]
+            p = e.position
+            if Math.pow(p[0]-x,2)+Math.pow(p[1]-y,2) <= 4*RADIUS_2
+              collisions[i] = p
+          else
+            BvR.arena.deleteEntity(i)
     collisions
   handleCollisions: (id) ->
     e = BvR.arena.entities[id]
     for i,position of @detectCollisions(id)
       [x,y] = position
-      e.position = [e.position[0]+(e.position[0]-x)*0.05, e.position[1]+(e.position[1]-y)*0.05]
+      e.position = [e.position[0]+(e.position[0]-x)*0.08, e.position[1]+(e.position[1]-y)*0.08]
 
 
 window.BvR =
