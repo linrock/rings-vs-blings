@@ -1,5 +1,5 @@
 (function() {
-  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, BERSERK_DURATION, Bling, COLOR_BLING, COLOR_RING, COLOR_RING_BERSERK, CollisionGrid, DirectionIndicator, Entity, Explosion, FPS, FadeAway, GRID_SIZE, HP_BLING, HP_RING, MAX_SPEED_BLING, MAX_SPEED_RING, Projectile, RADIUS, RADIUS_2, Ring, SELECTOR_BORDER, SELECTOR_FILL, Selector, arena, context;
+  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, BERSERK_DURATION, Bling, COLOR_BLING, COLOR_RING, COLOR_RING_BERSERK, CollisionGrid, DirectionIndicator, Entity, Explosion, FPS, FadeAway, GRID_SIZE, HP_BLING, HP_RING, MAX_SPEED_BLING, MAX_SPEED_RING, MOVE_ATTACK, MOVE_NORMAL, MoveIndicator, Projectile, RADIUS, RADIUS_2, Ring, SELECTOR_BORDER, SELECTOR_FILL, Selector, arena, context;
   var __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
@@ -16,6 +16,8 @@
   RADIUS_2 = RADIUS * RADIUS;
   SELECTOR_FILL = 'rgba(102,255,0,0.1)';
   SELECTOR_BORDER = 'green';
+  MOVE_NORMAL = 0;
+  MOVE_ATTACK = 1;
   COLOR_RING = 'darkblue';
   COLOR_RING_BERSERK = 'deepskyblue';
   HP_RING = 45;
@@ -540,6 +542,32 @@
     };
     return DirectionIndicator;
   })();
+  MoveIndicator = (function() {
+    function MoveIndicator(kwargs) {
+      this.type = kwargs.type || MOVE_NORMAL;
+      this.position = kwargs.position;
+      this.flags = {
+        finished: false
+      };
+    }
+    MoveIndicator.prototype.mainLoop = function() {
+      return this.draw();
+    };
+    MoveIndicator.prototype.draw = function() {
+      var f;
+      if (!this.flags.finished) {
+        f = new FadeAway({
+          position: this.position,
+          radius: 5,
+          rate: 1 / FPS,
+          color_code: [50, 205, 50]
+        });
+        BvR.arena.addEntity(f);
+      }
+      return this.flags.finished = true;
+    };
+    return MoveIndicator;
+  })();
   Selector = (function() {
     function Selector() {
       this.start = false;
@@ -563,7 +591,7 @@
         }
       }, this);
       document.onmousedown = __bind(function(e) {
-        var entity, i, position, _ref, _results;
+        var entity, i, m, position, _ref, _results;
         position = getOffsets(e);
         if (e.button === 0) {
           return this.start = position;
@@ -572,7 +600,9 @@
           _results = [];
           for (i in _ref) {
             entity = _ref[i];
-            _results.push(entity.flags.selected ? e.shiftKey ? entity.move(position, true) : entity.move(position) : void 0);
+            _results.push(entity.flags.selected ? (e.shiftKey ? entity.move(position, true) : entity.move(position), m = new MoveIndicator({
+              position: position
+            }), BvR.arena.addEntity(m)) : void 0);
           }
           return _results;
         }

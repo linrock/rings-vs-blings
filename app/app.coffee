@@ -9,6 +9,9 @@ RADIUS_2 = RADIUS*RADIUS
 SELECTOR_FILL = 'rgba(102,255,0,0.1)'
 SELECTOR_BORDER = 'green'
 
+MOVE_NORMAL = 0
+MOVE_ATTACK = 1
+
 COLOR_RING = 'darkblue'
 COLOR_RING_BERSERK = 'deepskyblue'
 HP_RING = 45
@@ -378,6 +381,24 @@ class DirectionIndicator
       context.stroke()
 
 
+class MoveIndicator
+  constructor: (kwargs) ->
+    @type = kwargs.type || MOVE_NORMAL
+    @position = kwargs.position
+    @flags =
+      finished: false
+  mainLoop: -> @draw()
+  draw: ->
+    unless @flags.finished
+      f = new FadeAway
+        position: @position,
+        radius: 5,
+        rate: 1/FPS
+        color_code: [50,205,50]
+      BvR.arena.addEntity(f)
+    @flags.finished = true
+
+
 class Selector
   constructor: ->
     @start = false
@@ -403,6 +424,8 @@ class Selector
               entity.move(position, true)
             else
               entity.move(position)
+            m = new MoveIndicator(position: position)
+            BvR.arena.addEntity(m)
     document.onmouseup = (e) =>
       if e.button == 0
         @selectRegion(@start, @end)
