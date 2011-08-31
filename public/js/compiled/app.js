@@ -8,7 +8,7 @@
     child.__super__ = parent.prototype;
     return child;
   }, __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
-  ARENA_WIDTH = 640;
+  ARENA_WIDTH = 800;
   ARENA_HEIGHT = 480;
   GRID_SIZE = 20;
   FPS = 40;
@@ -35,8 +35,11 @@
       this.flags = {
         moving: false,
         selected: false,
-        collides: true,
         finished: false
+      };
+      this.properties = {
+        collides: true,
+        selectable: false
       };
       this.max_speed = false;
       this.position = (kwargs != null ? kwargs.position : void 0) || false;
@@ -204,6 +207,7 @@
       this.hp = HP_RING;
       this.max_speed = MAX_SPEED_RING;
       this.color = COLOR_RING;
+      this.properties.selectable = true;
     }
     Ring.prototype.checkNearbyEnemies = function() {
       var candidates, d2, e, i, p, target, x, y, _ref;
@@ -386,7 +390,7 @@
           if ((_ref2 = e.flags) != null ? _ref2.finished : void 0) {
             this.deleteEntity(i);
           } else {
-            if ((_ref3 = e.flags) != null ? _ref3.collides : void 0) {
+            if ((_ref3 = e.properties) != null ? _ref3.collides : void 0) {
               BvR.collisions.updateEntity(i, e.position);
             }
             BvR.collisions.handleCollisions(i);
@@ -399,7 +403,7 @@
     Arena.prototype.addEntity = function(e) {
       var _ref;
       this.entities[this.counter] = e;
-      if ((_ref = e.flags) != null ? _ref.collides : void 0) {
+      if ((_ref = e.properties) != null ? _ref.collides : void 0) {
         BvR.collisions.updateEntity(this.counter, e.position);
       }
       return this.counter++;
@@ -416,9 +420,9 @@
       generatePosition = __bind(function() {
         var e, i, position, x, y, _ref, _ref2;
         if (type === Bling) {
-          position = [300 + Math.random() * 300, 150 + Math.random() * 300];
+          position = [550 + Math.random() * 200, 230 + Math.random() * 200];
         } else {
-          position = [20 + Math.random() * 150, 20 + Math.random() * 150];
+          position = [50 + Math.random() * 150, 50 + Math.random() * 150];
         }
         _ref = this.entities;
         for (i in _ref) {
@@ -452,19 +456,21 @@
       this.bindKeys();
     }
     Selector.prototype.bindKeys = function() {
-      document.onmousemove = __bind(function(e) {
+      var getOffsets;
+      getOffsets = function(e) {
         var x, y;
+        x = e.x - arena.offsetLeft - arena.clientLeft + window.pageXOffset;
+        y = e.y - arena.offsetTop - arena.clientTop + window.pageYOffset;
+        return [x, y];
+      };
+      document.onmousemove = __bind(function(e) {
         if (this.start) {
-          x = e.x - arena.offsetLeft - arena.clientLeft;
-          y = e.y - arena.offsetTop - arena.clientTop;
-          return this.end = [x, y];
+          return this.end = getOffsets(e);
         }
       }, this);
       document.onmousedown = __bind(function(e) {
-        var i, position, x, y, _ref, _results;
-        x = e.x - arena.offsetLeft - arena.clientLeft;
-        y = e.y - arena.offsetTop - arena.clientTop;
-        position = [x, y];
+        var i, position, _ref, _results;
+        position = getOffsets(e);
         if (e.button === 0) {
           return this.start = position;
         } else if (e.button === 2) {
@@ -478,16 +484,15 @@
         }
       }, this);
       document.onmouseup = __bind(function(e) {
-        var i, x, y, _ref, _results;
+        var i, x, y, _ref, _ref2, _ref3, _results;
         if (e.button === 0) {
           this.selectRegion(this.start, this.end);
-          x = e.x - arena.offsetLeft - arena.clientLeft;
-          y = e.y - arena.offsetTop - arena.clientTop;
-          _ref = BvR.arena.entities;
+          _ref = getOffsets(e), x = _ref[0], y = _ref[1];
+          _ref2 = BvR.arena.entities;
           _results = [];
-          for (i in _ref) {
-            e = _ref[i];
-            if (e instanceof Ring && Math.pow(e.position[0] - x, 2) + Math.pow(e.position[1] - y, 2) < RADIUS_2) {
+          for (i in _ref2) {
+            e = _ref2[i];
+            if (((_ref3 = e.properties) != null ? _ref3.selectable : void 0) && Math.pow(e.position[0] - x, 2) + Math.pow(e.position[1] - y, 2) < RADIUS_2) {
               e.flags.selected = true;
               break;
             }
@@ -650,5 +655,5 @@
     }
   };
   BvR.arena.spawnEntity(30, Ring);
-  BvR.arena.spawnEntity(30, Bling);
+  BvR.arena.spawnEntity(20, Bling);
 }).call(this);

@@ -1,4 +1,4 @@
-ARENA_WIDTH = 640
+ARENA_WIDTH = 800
 ARENA_HEIGHT = 480
 GRID_SIZE = 20
 
@@ -32,8 +32,10 @@ class Entity
     @flags =
       moving: false
       selected: false
-      collides: true
       finished: false
+    @properties =
+      collides: true
+      selectable: false
     @max_speed = false
     @position = kwargs?.position or false
     @target_position = false
@@ -143,6 +145,7 @@ class Ring extends Entity
     @hp = HP_RING
     @max_speed = MAX_SPEED_RING
     @color = COLOR_RING
+    @properties.selectable = true
   checkNearbyEnemies: ->
     candidates = []
     for i,e of BvR.arena.entities
@@ -276,14 +279,14 @@ class Arena
         if e.flags?.finished
           @deleteEntity(i)
         else
-          BvR.collisions.updateEntity(i, e.position) if e.flags?.collides
+          BvR.collisions.updateEntity(i, e.position) if e.properties?.collides
           BvR.collisions.handleCollisions(i)
           e.mainLoop()
       BvR.frame++
     , 1000/FPS
   addEntity: (e) ->
     @entities[@counter] = e
-    BvR.collisions.updateEntity(@counter, e.position) if e.flags?.collides
+    BvR.collisions.updateEntity(@counter, e.position) if e.properties?.collides
     @counter++
   deleteEntity: (id) ->
     delete BvR.collisions.id_lookup[id]
@@ -291,9 +294,9 @@ class Arena
   spawnEntity: (count, type = Bling) ->
     generatePosition = =>
       if type == Bling
-        position = [300+Math.random()*300, 150+Math.random()*300]
+        position = [550+Math.random()*200, 230+Math.random()*200]
       else
-        position = [20+Math.random()*150, 20+Math.random()*150]
+        position = [50+Math.random()*150, 50+Math.random()*150]
       for i,e of @entities
         if e instanceof type
           [x,y] = e.position
@@ -312,28 +315,25 @@ class Selector
     @end = false
     @bindKeys()
   bindKeys: ->
+    getOffsets = (e) ->
+      x = e.x-arena.offsetLeft-arena.clientLeft+window.pageXOffset
+      y = e.y-arena.offsetTop-arena.clientTop+window.pageYOffset
+      [x,y]
     document.onmousemove = (e) =>
-      if @start
-        x = e.x-arena.offsetLeft-arena.clientLeft
-        y = e.y-arena.offsetTop-arena.clientTop
-        @end = [x,y]
+      @end = getOffsets(e) if @start
     document.onmousedown = (e) =>
-      x = e.x-arena.offsetLeft-arena.clientLeft
-      y = e.y-arena.offsetTop-arena.clientTop
-      position = [x,y]
+      position = getOffsets(e)
       if e.button == 0
         @start = position
       else if e.button == 2
         for i,e of BvR.arena.entities
-          if e.flags.selected
-            e.move(position)
+          e.move(position) if e.flags.selected
     document.onmouseup = (e) =>
       if e.button == 0
         @selectRegion(@start, @end)
-        x = e.x-arena.offsetLeft-arena.clientLeft
-        y = e.y-arena.offsetTop-arena.clientTop
+        [x,y] = getOffsets(e)
         for i,e of BvR.arena.entities
-          if e instanceof Ring and Math.pow(e.position[0]-x,2) + Math.pow(e.position[1]-y,2) < RADIUS_2
+          if e.properties?.selectable and Math.pow(e.position[0]-x,2)+Math.pow(e.position[1]-y,2) < RADIUS_2
             e.flags.selected = true
             break
     document.oncontextmenu = -> false
@@ -417,4 +417,4 @@ window.BvR =
 
 
 BvR.arena.spawnEntity(30, Ring)
-BvR.arena.spawnEntity(30, Bling)
+BvR.arena.spawnEntity(20, Bling)
