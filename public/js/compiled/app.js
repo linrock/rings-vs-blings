@@ -1,5 +1,5 @@
 (function() {
-  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, Bling, COLOR_BLING, COLOR_RING, CollisionGrid, DirectionIndicator, Entity, Explosion, FPS, FadeAway, GRID_SIZE, HP_BLING, HP_RING, MAX_SPEED_BLING, MAX_SPEED_RING, Projectile, RADIUS, RADIUS_2, Ring, Selector, arena, context;
+  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, BERSERK_DURATION, Bling, COLOR_BLING, COLOR_RING, COLOR_RING_BERSERK, CollisionGrid, DirectionIndicator, Entity, Explosion, FPS, FadeAway, GRID_SIZE, HP_BLING, HP_RING, MAX_SPEED_BLING, MAX_SPEED_RING, Projectile, RADIUS, RADIUS_2, Ring, Selector, arena, context;
   var __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
@@ -15,11 +15,13 @@
   RADIUS = 9;
   RADIUS_2 = RADIUS * RADIUS;
   COLOR_RING = 'darkblue';
+  COLOR_RING_BERSERK = 'deepskyblue';
   HP_RING = 45;
   MAX_SPEED_RING = 2.25;
   ATTACK_RATE_RING = ~~(0.8608 * FPS);
   ATTACK_RANGE_RING = 200;
   ATTACK_DAMAGE_RING = 6;
+  BERSERK_DURATION = 15 * FPS;
   COLOR_BLING = '#66ff00';
   HP_BLING = 30;
   MAX_SPEED_BLING = 2.9531;
@@ -115,6 +117,9 @@
     Entity.prototype.setPosition = function(position) {
       return this.position = this.boundedPosition(position);
     };
+    Entity.prototype.destroy = function() {
+      return this.flags.finished = true;
+    };
     return Entity;
   })();
   Bling = (function() {
@@ -130,7 +135,7 @@
       this.hp -= hp;
       this.color = 'orange';
       if (this.hp <= 0 && !this.flags.finished) {
-        this.explode();
+        this.destroy();
         return BvR.selectors.kills.innerText = ++BvR.stats.kills;
       }
     };
@@ -145,7 +150,7 @@
           y = e.position[1] - this.position[1];
           d2 = Math.pow(x, 2) + Math.pow(y, 2);
           if (d2 < Math.pow(ATTACK_RANGE_BLING / 2, 2)) {
-            this.explode();
+            this.destroy();
             break;
           }
         }
@@ -177,7 +182,7 @@
       context.lineWidth = 1;
       return context.stroke();
     };
-    Bling.prototype.explode = function() {
+    Bling.prototype.destroy = function() {
       var e;
       e = new Explosion({
         position: this.position,
@@ -218,7 +223,10 @@
       Ring.__super__.constructor.call(this, kwargs);
       this.hp = HP_RING;
       this.max_speed = MAX_SPEED_RING;
+      this.attack_damage = ATTACK_DAMAGE_RING;
       this.color = COLOR_RING;
+      this.berserk_start = 0;
+      this.flags.berserk = false;
       this.properties.selectable = true;
     }
     Ring.prototype.checkNearbyEnemies = function() {
@@ -242,17 +250,30 @@
         p = new Projectile({
           position: this.position,
           target: target,
-          damage: ATTACK_DAMAGE_RING
+          damage: this.attack_damage
         });
         BvR.arena.addEntity(p);
         return this.color = 'yellow';
       }
     };
     Ring.prototype.mainLoop = function() {
-      Ring.__super__.mainLoop.call(this);
       if (BvR.frame % 2 === 0) {
         this.color = COLOR_RING;
       }
+      if (this.flags.berserk) {
+        if (this.berserk_start + BERSERK_DURATION > BvR.frame) {
+          this.max_speed = MAX_SPEED_RING * 1.5;
+          this.attack_damage = ATTACK_DAMAGE_RING * 1.5;
+          if (BvR.frame % 2 === 0) {
+            this.color = COLOR_RING_BERSERK;
+          }
+        } else {
+          this.flags.berserk = false;
+          this.max_speed = MAX_SPEED_RING;
+          this.attack_damage = ATTACK_DAMAGE_RING;
+        }
+      }
+      Ring.__super__.mainLoop.call(this);
       if (!this.flags.moving && (BvR.frame + this.frame_offset) % ATTACK_RATE_RING === 0) {
         return this.checkNearbyEnemies();
       }
@@ -260,6 +281,14 @@
     Ring.prototype.takeDamage = function(hp) {
       if (this.hp -= hp <= 0) {
         return this.destroy();
+      }
+    };
+    Ring.prototype.berserk = function() {
+      if (this.hp > 10) {
+        console.log('BERSERK');
+        this.hp -= 10;
+        this.flags.berserk = true;
+        return this.berserk_start = BvR.frame;
       }
     };
     Ring.prototype.destroy = function() {
@@ -522,16 +551,16 @@
         }
       }, this);
       document.onmouseup = __bind(function(e) {
-        var i, x, y, _ref, _ref2, _ref3, _results;
+        var entity, i, x, y, _ref, _ref2, _ref3, _results;
         if (e.button === 0) {
           this.selectRegion(this.start, this.end);
           _ref = getOffsets(e), x = _ref[0], y = _ref[1];
           _ref2 = BvR.arena.entities;
           _results = [];
           for (i in _ref2) {
-            e = _ref2[i];
-            if (((_ref3 = e.properties) != null ? _ref3.selectable : void 0) && Math.pow(e.position[0] - x, 2) + Math.pow(e.position[1] - y, 2) < RADIUS_2) {
-              e.flags.selected = true;
+            entity = _ref2[i];
+            if (((_ref3 = entity.properties) != null ? _ref3.selectable : void 0) && Math.pow(entity.position[0] - x, 2) + Math.pow(entity.position[1] - y, 2) < RADIUS_2) {
+              entity.flags.selected = true;
               break;
             }
           }
@@ -542,8 +571,18 @@
         return false;
       };
       return document.onkeydown = __bind(function(e) {
+        var entity, i, _ref, _results;
         if (e.keyCode === 27) {
-          return this.deselectAll();
+          this.deselectAll();
+        }
+        if (e.keyCode === 84) {
+          _ref = BvR.arena.entities;
+          _results = [];
+          for (i in _ref) {
+            entity = _ref[i];
+            _results.push(entity instanceof Ring && entity.flags.selected ? entity.berserk() : void 0);
+          }
+          return _results;
         }
       }, this);
     };
