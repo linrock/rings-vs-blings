@@ -22,7 +22,7 @@
   ATTACK_RANGE_RING = 200;
   ATTACK_DAMAGE_RING = 6;
   BERSERK_DURATION = 15 * FPS;
-  COLOR_BLING = '#66ff00';
+  COLOR_BLING = 'rgb(102,255,0)';
   HP_BLING = 30;
   MAX_SPEED_BLING = 2.9531;
   ATTACK_RANGE_BLING = 40;
@@ -161,11 +161,15 @@
       if (BvR.frame % 2 === 0) {
         this.color = COLOR_BLING;
       }
-      switch ((BvR.frame + this.frame_offset) % 40) {
-        case 3:
+      switch ((BvR.frame + this.frame_offset) % 30) {
+        case 0:
           return this.radius = RADIUS;
-        case 37:
-          return this.radius = RADIUS + 1.2;
+        case 21:
+          return this.radius = RADIUS * 1.05;
+        case 25:
+          return this.radius = RADIUS * 1.1;
+        case 29:
+          return this.radius = RADIUS * 1.05;
       }
     };
     Bling.prototype.mainLoop = function() {
@@ -179,7 +183,7 @@
     Bling.prototype.draw = function() {
       Bling.__super__.draw.call(this);
       context.strokeStyle = 'darkgreen';
-      context.lineWidth = 1;
+      context.lineWidth = 2;
       return context.stroke();
     };
     Bling.prototype.destroy = function() {
@@ -296,7 +300,8 @@
       if (!this.flags.finished) {
         f = new FadeAway({
           position: this.position,
-          radius: this.radius
+          radius: this.radius,
+          color_code: [0, 0, 139]
         });
         BvR.arena.addEntity(f);
       }
@@ -308,9 +313,10 @@
     function FadeAway(kwargs) {
       this.position = kwargs.position;
       this.radius = kwargs.radius;
-      this.color = 'rgba(0,0,139,1)';
+      this.color_code = kwargs.color_code;
+      this.rate = kwargs.rate || 1 / FPS;
       this.opacity = 1;
-      this.rate = 1 / FPS;
+      this.setColor(this.color_code);
       this.flags = {
         finished: false
       };
@@ -322,13 +328,16 @@
       return context.fill();
     };
     FadeAway.prototype.mainLoop = function() {
-      this.color = 'rgba(0,0,139,' + this.opacity + ')';
+      this.setColor();
       this.opacity -= this.rate;
       if (this.opacity > 0) {
         return this.draw();
       } else {
         return this.flags.finished = true;
       }
+    };
+    FadeAway.prototype.setColor = function() {
+      return this.color = 'rgba(' + this.color_code[0] + ',' + this.color_code[1] + ',' + this.color_code[2] + ',' + this.opacity + ')';
     };
     return FadeAway;
   })();
@@ -354,13 +363,14 @@
     };
     Explosion.prototype.mainLoop = function() {
       if (this.radius >= this.r_max) {
+        this.fadeOut();
         this.rate *= -1;
       }
       this.radius += this.rate;
       if (this.radius > 0) {
         return this.draw();
       } else {
-        return this.flags.finished = true;
+        return this.destroy();
       }
     };
     Explosion.prototype.damageNearbyEnemies = function() {
@@ -372,6 +382,21 @@
         _results.push(e instanceof Ring ? (x = e.position[0] - this.position[0], y = e.position[1] - this.position[1], d2 = Math.pow(x, 2) + Math.pow(y, 2), d2 <= this.r_max_2 ? e.takeDamage(this.damage) : void 0) : void 0);
       }
       return _results;
+    };
+    Explosion.prototype.fadeOut = function() {
+      var f;
+      if (!this.flags.finished) {
+        f = new FadeAway({
+          position: this.position,
+          radius: this.r_max,
+          color_code: [102, 255, 0],
+          rate: 1.5 / FPS
+        });
+        return BvR.arena.addEntity(f);
+      }
+    };
+    Explosion.prototype.destroy = function() {
+      return this.flags.finished = true;
     };
     return Explosion;
   })();
@@ -731,6 +756,6 @@
       wave: document.getElementById('wave-count')
     }
   };
-  BvR.arena.spawnEntity(30, Ring);
-  BvR.arena.spawnEntity(20, Bling);
+  BvR.arena.spawnEntity(40, Ring);
+  BvR.arena.spawnEntity(30, Bling);
 }).call(this);

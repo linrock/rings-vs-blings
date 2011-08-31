@@ -15,7 +15,7 @@ ATTACK_RANGE_RING = 200
 ATTACK_DAMAGE_RING = 6
 BERSERK_DURATION = 15*FPS
 
-COLOR_BLING = '#66ff00'
+COLOR_BLING = 'rgb(102,255,0)'
 HP_BLING = 30
 MAX_SPEED_BLING = 2.9531 # 2.5
 ATTACK_RANGE_BLING = 40
@@ -114,9 +114,11 @@ class Bling extends Entity
           break
   animate: ->
     @color = COLOR_BLING if BvR.frame % 2 == 0
-    switch (BvR.frame + @frame_offset) % 40
-      when 3 then @radius = RADIUS
-      when 37 then @radius = RADIUS+1.2
+    switch (BvR.frame + @frame_offset) % 30
+      when 0 then @radius = RADIUS
+      when 21 then @radius = RADIUS*1.05
+      when 25 then @radius = RADIUS*1.1
+      when 29 then @radius = RADIUS*1.05
   mainLoop: ->
     super()
     @animate()
@@ -125,7 +127,7 @@ class Bling extends Entity
   draw: ->
     super()
     context.strokeStyle = 'darkgreen'
-    context.lineWidth = 1
+    context.lineWidth = 2
     context.stroke()
   destroy: ->
     e = new Explosion
@@ -201,7 +203,10 @@ class Ring extends Entity
       @berserk_start = BvR.frame
   destroy: ->
     unless @flags.finished
-      f = new FadeAway(position: @position, radius: @radius)
+      f = new FadeAway
+        position: @position,
+        radius: @radius,
+        color_code: [0,0,139]
       BvR.arena.addEntity(f)
     @flags.finished = true
 
@@ -210,9 +215,10 @@ class FadeAway
   constructor: (kwargs) ->
     @position = kwargs.position
     @radius = kwargs.radius
-    @color = 'rgba(0,0,139,1)'
+    @color_code = kwargs.color_code
+    @rate = kwargs.rate or 1/FPS
     @opacity = 1
-    @rate = 1/FPS
+    @setColor(@color_code)
     @flags =
       finished: false
   draw: ->
@@ -221,12 +227,14 @@ class FadeAway
     context.fillStyle = @color
     context.fill()
   mainLoop: ->
-    @color = 'rgba(0,0,139,' + @opacity + ')'
+    @setColor()
     @opacity -= @rate
     if @opacity > 0
       @draw()
     else
       @flags.finished = true
+  setColor: ->
+    @color = 'rgba('+@color_code[0]+','+@color_code[1]+','+@color_code[2]+','+@opacity+')'
 
 
 class Explosion
@@ -247,12 +255,14 @@ class Explosion
     context.fillStyle = @color
     context.fill()
   mainLoop: ->
-    @rate *= -1 if @radius >= @r_max
+    if @radius >= @r_max
+      @fadeOut()
+      @rate *= -1
     @radius += @rate
     if @radius > 0
       @draw()
     else
-      @flags.finished = true
+      @destroy()
   damageNearbyEnemies: ->
     for i,e of BvR.arena.entities
       if e instanceof Ring
@@ -261,6 +271,16 @@ class Explosion
         d2 = Math.pow(x,2)+Math.pow(y,2)
         if d2 <= @r_max_2
           e.takeDamage(@damage)
+  fadeOut: ->
+    unless @flags.finished
+      f = new FadeAway
+        position: @position
+        radius: @r_max
+        color_code: [102,255,0]
+        rate: 1.5/FPS
+      BvR.arena.addEntity(f)
+  destroy: ->
+    @flags.finished = true
 
 
 class Projectile
@@ -472,5 +492,5 @@ window.BvR =
     wave: document.getElementById('wave-count')
 
 
-BvR.arena.spawnEntity(30, Ring)
-BvR.arena.spawnEntity(20, Bling)
+BvR.arena.spawnEntity(40, Ring)
+BvR.arena.spawnEntity(30, Bling)
