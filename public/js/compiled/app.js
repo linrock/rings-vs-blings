@@ -593,11 +593,11 @@
     CollisionGrid.prototype.initializeLookupTable = function() {
       var x, y, _ref, _results;
       _results = [];
-      for (x = 0, _ref = ARENA_WIDTH / GRID_SIZE - 2; 0 <= _ref ? x <= _ref : x >= _ref; 0 <= _ref ? x++ : x--) {
+      for (x = 0, _ref = ARENA_WIDTH / GRID_SIZE; 0 <= _ref ? x <= _ref : x >= _ref; 0 <= _ref ? x++ : x--) {
         _results.push((function() {
           var _ref2, _results2;
           _results2 = [];
-          for (y = 0, _ref2 = ARENA_HEIGHT / GRID_SIZE - 2; 0 <= _ref2 ? y <= _ref2 : y >= _ref2; 0 <= _ref2 ? y++ : y--) {
+          for (y = 0, _ref2 = ARENA_HEIGHT / GRID_SIZE; 0 <= _ref2 ? y <= _ref2 : y >= _ref2; 0 <= _ref2 ? y++ : y--) {
             _results2.push(this.grid_lookup[[x, y]] = {});
           }
           return _results2;

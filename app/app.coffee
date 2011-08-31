@@ -396,8 +396,8 @@ class CollisionGrid
     @id_lookup = {}
     @initializeLookupTable()
   initializeLookupTable: ->
-    for x in [0..ARENA_WIDTH/GRID_SIZE-2]
-      for y in [0..ARENA_HEIGHT/GRID_SIZE-2]
+    for x in [0..ARENA_WIDTH/GRID_SIZE]
+      for y in [0..ARENA_HEIGHT/GRID_SIZE]
         @grid_lookup[[x,y]] = {}
   updateEntity: (id, position) ->
     return unless id and position
