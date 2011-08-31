@@ -6,6 +6,9 @@ FPS = 40
 RADIUS = 9
 RADIUS_2 = RADIUS*RADIUS
 
+SELECTOR_FILL = 'rgba(102,255,0,0.1)'
+SELECTOR_BORDER = 'green'
+
 COLOR_RING = 'darkblue'
 COLOR_RING_BERSERK = 'deepskyblue'
 HP_RING = 45
@@ -323,7 +326,6 @@ class Arena
   mainLoop: ->
     @interval = setInterval =>
       context.clearRect(0,0,ARENA_WIDTH,ARENA_HEIGHT)
-      BvR.selector.draw()
       for i,e of @entities
         if e.flags?.finished
           @deleteEntity(i)
@@ -331,6 +333,7 @@ class Arena
           BvR.collisions.updateEntity(i, e.position) if e.properties?.collides
           BvR.collisions.handleCollisions(i)
           e.mainLoop()
+      BvR.selector.draw()
       BvR.frame++
     , 1000/FPS
   addEntity: (e) ->
@@ -417,9 +420,11 @@ class Selector
             entity.berserk()
   draw: ->
     if @start and @end
+      context.fillStyle = SELECTOR_FILL
+      context.fillRect(@start[0], @start[1], @end[0]-@start[0], @end[1]-@start[1])
       context.beginPath()
+      context.strokeStyle = SELECTOR_BORDER
       context.rect(@start[0], @start[1], @end[0]-@start[0], @end[1]-@start[1])
-      context.strokeStyle = 'green'
       context.stroke()
   mainLoop: -> @draw()
   deselectAll: ->

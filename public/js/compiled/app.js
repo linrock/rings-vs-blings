@@ -1,5 +1,5 @@
 (function() {
-  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, BERSERK_DURATION, Bling, COLOR_BLING, COLOR_RING, COLOR_RING_BERSERK, CollisionGrid, DirectionIndicator, Entity, Explosion, FPS, FadeAway, GRID_SIZE, HP_BLING, HP_RING, MAX_SPEED_BLING, MAX_SPEED_RING, Projectile, RADIUS, RADIUS_2, Ring, Selector, arena, context;
+  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, BERSERK_DURATION, Bling, COLOR_BLING, COLOR_RING, COLOR_RING_BERSERK, CollisionGrid, DirectionIndicator, Entity, Explosion, FPS, FadeAway, GRID_SIZE, HP_BLING, HP_RING, MAX_SPEED_BLING, MAX_SPEED_RING, Projectile, RADIUS, RADIUS_2, Ring, SELECTOR_BORDER, SELECTOR_FILL, Selector, arena, context;
   var __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
@@ -14,6 +14,8 @@
   FPS = 40;
   RADIUS = 9;
   RADIUS_2 = RADIUS * RADIUS;
+  SELECTOR_FILL = 'rgba(102,255,0,0.1)';
+  SELECTOR_BORDER = 'green';
   COLOR_RING = 'darkblue';
   COLOR_RING_BERSERK = 'deepskyblue';
   HP_RING = 45;
@@ -449,7 +451,6 @@
       return this.interval = setInterval(__bind(function() {
         var e, i, _ref, _ref2, _ref3;
         context.clearRect(0, 0, ARENA_WIDTH, ARENA_HEIGHT);
-        BvR.selector.draw();
         _ref = this.entities;
         for (i in _ref) {
           e = _ref[i];
@@ -463,6 +464,7 @@
             e.mainLoop();
           }
         }
+        BvR.selector.draw();
         return BvR.frame++;
       }, this), 1000 / FPS);
     };
@@ -613,9 +615,11 @@
     };
     Selector.prototype.draw = function() {
       if (this.start && this.end) {
+        context.fillStyle = SELECTOR_FILL;
+        context.fillRect(this.start[0], this.start[1], this.end[0] - this.start[0], this.end[1] - this.start[1]);
         context.beginPath();
+        context.strokeStyle = SELECTOR_BORDER;
         context.rect(this.start[0], this.start[1], this.end[0] - this.start[0], this.end[1] - this.start[1]);
-        context.strokeStyle = 'green';
         return context.stroke();
       }
     };
