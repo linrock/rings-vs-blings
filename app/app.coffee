@@ -20,14 +20,14 @@ COLOR_RING_BERSERK = 'rgb(30,180,255)'
 HP_RING = 45
 MAX_SPEED_RING = 2.25*40/FPS
 ATTACK_RATE_RING = ~~(0.8608*FPS)
-ATTACK_RANGE_RING = 180
+ATTACK_RANGE_RING = 160
 ATTACK_DAMAGE_RING = 6
 BERSERK_DURATION = 15*FPS
 
 COLOR_BLING = 'rgb(102,255,0)'
 HP_BLING = 30
 MAX_SPEED_BLING = 2.9531*40/FPS # 2.5
-ATTACK_RANGE_BLING = 40
+ATTACK_RANGE_BLING = 160/3
 ATTACK_DAMAGE_BLING = 35
 
 
@@ -202,22 +202,23 @@ class Ring extends Entity
     context.lineWidth = 1
     context.stroke()
   mainLoop: ->
-    @color = COLOR_RING if BvR.frame % 5 == 0
     if @flags.berserk
       if @berserk_start + BERSERK_DURATION > BvR.frame
         @max_speed = MAX_SPEED_RING*1.5
         @attack_damage = ATTACK_DAMAGE_RING*1.5
-        @color = COLOR_RING_BERSERK if BvR.frame % 2 == 0
+        @color = COLOR_RING_BERSERK if BvR.frame % 5 == 0
       else
         @flags.berserk = false
         @max_speed = MAX_SPEED_RING
         @attack_damage = ATTACK_DAMAGE_RING
+    else
+      @color = COLOR_RING if BvR.frame % 5 == 0
     super()
     if not @flags.moving and BvR.frame > (ATTACK_RATE_RING+@last_attack_at)
       @checkNearbyEnemies()
   takeDamage: (hp) ->
     @hp -= hp
-    @destroy() if @hp < 0
+    @destroy() if @hp <= 0
   berserk: ->
     if @hp > 10
       @hp -= 10
@@ -550,5 +551,5 @@ window.BvR =
     wave: document.getElementById('wave-count')
 
 
-BvR.arena.spawnEntity(40, Ring)
-BvR.arena.spawnEntity(30, Bling)
+BvR.arena.spawnEntity(60, Ring)
+BvR.arena.spawnEntity(45, Bling)

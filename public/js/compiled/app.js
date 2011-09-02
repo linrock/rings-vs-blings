@@ -25,13 +25,13 @@
   HP_RING = 45;
   MAX_SPEED_RING = 2.25 * 40 / FPS;
   ATTACK_RATE_RING = ~~(0.8608 * FPS);
-  ATTACK_RANGE_RING = 180;
+  ATTACK_RANGE_RING = 160;
   ATTACK_DAMAGE_RING = 6;
   BERSERK_DURATION = 15 * FPS;
   COLOR_BLING = 'rgb(102,255,0)';
   HP_BLING = 30;
   MAX_SPEED_BLING = 2.9531 * 40 / FPS;
-  ATTACK_RANGE_BLING = 40;
+  ATTACK_RANGE_BLING = 160 / 3;
   ATTACK_DAMAGE_BLING = 35;
   arena = document.getElementById('arena');
   arena.width = ARENA_WIDTH;
@@ -279,20 +279,21 @@
       return context.stroke();
     };
     Ring.prototype.mainLoop = function() {
-      if (BvR.frame % 5 === 0) {
-        this.color = COLOR_RING;
-      }
       if (this.flags.berserk) {
         if (this.berserk_start + BERSERK_DURATION > BvR.frame) {
           this.max_speed = MAX_SPEED_RING * 1.5;
           this.attack_damage = ATTACK_DAMAGE_RING * 1.5;
-          if (BvR.frame % 2 === 0) {
+          if (BvR.frame % 5 === 0) {
             this.color = COLOR_RING_BERSERK;
           }
         } else {
           this.flags.berserk = false;
           this.max_speed = MAX_SPEED_RING;
           this.attack_damage = ATTACK_DAMAGE_RING;
+        }
+      } else {
+        if (BvR.frame % 5 === 0) {
+          this.color = COLOR_RING;
         }
       }
       Ring.__super__.mainLoop.call(this);
@@ -302,7 +303,7 @@
     };
     Ring.prototype.takeDamage = function(hp) {
       this.hp -= hp;
-      if (this.hp < 0) {
+      if (this.hp <= 0) {
         return this.destroy();
       }
     };
@@ -823,6 +824,6 @@
       wave: document.getElementById('wave-count')
     }
   };
-  BvR.arena.spawnEntity(40, Ring);
-  BvR.arena.spawnEntity(30, Bling);
+  BvR.arena.spawnEntity(60, Ring);
+  BvR.arena.spawnEntity(45, Bling);
 }).call(this);
