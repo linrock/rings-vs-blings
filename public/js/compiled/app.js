@@ -279,7 +279,7 @@
       return context.stroke();
     };
     Ring.prototype.mainLoop = function() {
-      if (BvR.frame % 2 === 0) {
+      if (BvR.frame % 5 === 0) {
         this.color = COLOR_RING;
       }
       if (this.flags.berserk) {

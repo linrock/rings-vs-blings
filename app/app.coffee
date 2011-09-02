@@ -202,7 +202,7 @@ class Ring extends Entity
     context.lineWidth = 1
     context.stroke()
   mainLoop: ->
-    @color = COLOR_RING if BvR.frame % 2 == 0
+    @color = COLOR_RING if BvR.frame % 5 == 0
     if @flags.berserk
       if @berserk_start + BERSERK_DURATION > BvR.frame
         @max_speed = MAX_SPEED_RING*1.5
