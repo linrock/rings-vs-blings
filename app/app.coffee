@@ -1,5 +1,5 @@
-ARENA_WIDTH = 800
-ARENA_HEIGHT = 480
+ARENA_WIDTH = 960
+ARENA_HEIGHT = 600
 GRID_SIZE = 20
 
 FPS = 40
@@ -11,6 +11,9 @@ SELECTOR_BORDER = 'green'
 
 MOVE_NORMAL = 0
 MOVE_ATTACK = 1
+
+RING_SPAWN_CENTER = [200,200]
+BLING_SPAWN_CENTER = [700,500]
 
 COLOR_RING = 'darkblue'
 COLOR_RING_BERSERK = 'deepskyblue'
@@ -347,19 +350,27 @@ class Arena
     delete BvR.collisions.id_lookup[id]
     delete @entities[id]
   spawnEntity: (count, type = Bling) ->
-    generatePosition = =>
-      if type == Bling
-        position = [550+Math.random()*200, 230+Math.random()*200]
-      else
-        position = [50+Math.random()*150, 50+Math.random()*150]
+    checkPositionAvailable = (position) =>
       for i,e of @entities
         if e instanceof type
           [x,y] = e.position
-          if Math.pow(position[0]-x,2)+Math.pow(position[1]-y,2) < RADIUS_2*4
-            return generatePosition()
-      position
+          return true if Math.pow(position[0]-x,2)+Math.pow(position[1]-y,2) < RADIUS_2*4
+      true
+    if type == Ring
+      center = RING_SPAWN_CENTER
+    else
+      center = BLING_SPAWN_CENTER
+    positions = [center]
     for i in [1..count]
-      @addEntity(new type(position: generatePosition()))
+      angle = Math.random()*2*Math.PI
+      m = (RADIUS+1)
+      v = [m*Math.cos(angle), m*Math.sin(angle)]
+      position = positions[positions.length-1]
+      new_position = [position[0]+v[0],position[1]+v[1]]
+      until checkPositionAvailable(new_position)
+        new_position = [position[0]+v[0],position[1]+v[1]]
+      positions.push(new_position)
+      @addEntity(new type(position: new_position))
   nextWave: ->
     BvR.selectors.wave.innerText = ++BvR.stats.wave
 

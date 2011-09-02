@@ -1,5 +1,5 @@
 (function() {
-  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, BERSERK_DURATION, Bling, COLOR_BLING, COLOR_RING, COLOR_RING_BERSERK, CollisionGrid, DirectionIndicator, Entity, Explosion, FPS, FadeAway, GRID_SIZE, HP_BLING, HP_RING, MAX_SPEED_BLING, MAX_SPEED_RING, MOVE_ATTACK, MOVE_NORMAL, MoveIndicator, Projectile, RADIUS, RADIUS_2, Ring, SELECTOR_BORDER, SELECTOR_FILL, Selector, arena, context;
+  var ARENA_HEIGHT, ARENA_WIDTH, ATTACK_DAMAGE_BLING, ATTACK_DAMAGE_RING, ATTACK_RANGE_BLING, ATTACK_RANGE_RING, ATTACK_RATE_RING, Arena, BERSERK_DURATION, BLING_SPAWN_CENTER, Bling, COLOR_BLING, COLOR_RING, COLOR_RING_BERSERK, CollisionGrid, DirectionIndicator, Entity, Explosion, FPS, FadeAway, GRID_SIZE, HP_BLING, HP_RING, MAX_SPEED_BLING, MAX_SPEED_RING, MOVE_ATTACK, MOVE_NORMAL, MoveIndicator, Projectile, RADIUS, RADIUS_2, RING_SPAWN_CENTER, Ring, SELECTOR_BORDER, SELECTOR_FILL, Selector, arena, context;
   var __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
@@ -8,8 +8,8 @@
     child.__super__ = parent.prototype;
     return child;
   }, __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
-  ARENA_WIDTH = 800;
-  ARENA_HEIGHT = 480;
+  ARENA_WIDTH = 960;
+  ARENA_HEIGHT = 600;
   GRID_SIZE = 20;
   FPS = 40;
   RADIUS = 9;
@@ -18,6 +18,8 @@
   SELECTOR_BORDER = 'green';
   MOVE_NORMAL = 0;
   MOVE_ATTACK = 1;
+  RING_SPAWN_CENTER = [200, 200];
+  BLING_SPAWN_CENTER = [700, 500];
   COLOR_RING = 'darkblue';
   COLOR_RING_BERSERK = 'deepskyblue';
   HP_RING = 45;
@@ -483,33 +485,43 @@
       return delete this.entities[id];
     };
     Arena.prototype.spawnEntity = function(count, type) {
-      var generatePosition, i, _results;
+      var angle, center, checkPositionAvailable, i, m, new_position, position, positions, v, _results;
       if (type == null) {
         type = Bling;
       }
-      generatePosition = __bind(function() {
-        var e, i, position, x, y, _ref, _ref2;
-        if (type === Bling) {
-          position = [550 + Math.random() * 200, 230 + Math.random() * 200];
-        } else {
-          position = [50 + Math.random() * 150, 50 + Math.random() * 150];
-        }
+      checkPositionAvailable = __bind(function(position) {
+        var e, i, x, y, _ref, _ref2;
         _ref = this.entities;
         for (i in _ref) {
           e = _ref[i];
           if (e instanceof type) {
             _ref2 = e.position, x = _ref2[0], y = _ref2[1];
             if (Math.pow(position[0] - x, 2) + Math.pow(position[1] - y, 2) < RADIUS_2 * 4) {
-              return generatePosition();
+              return true;
             }
           }
         }
-        return position;
+        return true;
       }, this);
+      if (type === Ring) {
+        center = RING_SPAWN_CENTER;
+      } else {
+        center = BLING_SPAWN_CENTER;
+      }
+      positions = [center];
       _results = [];
       for (i = 1; 1 <= count ? i <= count : i >= count; 1 <= count ? i++ : i--) {
+        angle = Math.random() * 2 * Math.PI;
+        m = RADIUS + 1;
+        v = [m * Math.cos(angle), m * Math.sin(angle)];
+        position = positions[positions.length - 1];
+        new_position = [position[0] + v[0], position[1] + v[1]];
+        while (!checkPositionAvailable(new_position)) {
+          new_position = [position[0] + v[0], position[1] + v[1]];
+        }
+        positions.push(new_position);
         _results.push(this.addEntity(new type({
-          position: generatePosition()
+          position: new_position
         })));
       }
       return _results;
