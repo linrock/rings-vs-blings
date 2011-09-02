@@ -22,7 +22,7 @@ MAX_SPEED_RING = 2.25
 ATTACK_RATE_RING = ~~(0.8608*FPS)
 ATTACK_RANGE_RING = 200
 ATTACK_DAMAGE_RING = 6
-BERSERK_DURATION = 15*FPS
+BERSERK_DURATION = 10*FPS
 
 COLOR_BLING = 'rgb(102,255,0)'
 HP_BLING = 30
@@ -169,6 +169,7 @@ class Ring extends Entity
     @attack_damage = ATTACK_DAMAGE_RING
     @color = COLOR_RING
     @berserk_start = 0
+    @last_attack_at = 0
     @flags.berserk = false
     @properties.selectable = true
   checkNearbyEnemies: ->
@@ -188,6 +189,7 @@ class Ring extends Entity
         target: target
         damage: @attack_damage
       BvR.arena.addEntity(p)
+      @last_attack_at = BvR.frame
       @color = 'yellow'
   mainLoop: ->
     @color = COLOR_RING if BvR.frame % 2 == 0
@@ -201,7 +203,8 @@ class Ring extends Entity
         @max_speed = MAX_SPEED_RING
         @attack_damage = ATTACK_DAMAGE_RING
     super()
-    @checkNearbyEnemies() if not @flags.moving and (BvR.frame+@frame_offset) % ATTACK_RATE_RING == 0
+    if not @flags.moving and BvR.frame > (ATTACK_RATE_RING+@last_attack_at)
+      @checkNearbyEnemies()
   takeDamage: (hp) ->
     @destroy() if @hp -= hp <= 0
   berserk: ->
@@ -447,11 +450,17 @@ class Selector
             break
     document.oncontextmenu = -> false
     document.onkeydown = (e) =>
-      @deselectAll() if e.keyCode == 27
-      if e.keyCode == 84
-        for i,entity of BvR.arena.entities
-          if entity instanceof Ring and entity.flags.selected
-            entity.berserk()
+      switch e.keyCode
+        when 27 # esc
+          @deselectAll()
+        when 72 # h
+          for i,entity of BvR.arena.entities
+            if entity.flags.selected
+              entity.flags.moving = false
+        when 84 # t
+          for i,entity of BvR.arena.entities
+            if entity instanceof Ring and entity.flags.selected
+              entity.berserk()
   draw: ->
     if @start and @end
       context.fillStyle = SELECTOR_FILL

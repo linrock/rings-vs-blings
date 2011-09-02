@@ -27,7 +27,7 @@
   ATTACK_RATE_RING = ~~(0.8608 * FPS);
   ATTACK_RANGE_RING = 200;
   ATTACK_DAMAGE_RING = 6;
-  BERSERK_DURATION = 15 * FPS;
+  BERSERK_DURATION = 10 * FPS;
   COLOR_BLING = 'rgb(102,255,0)';
   HP_BLING = 30;
   MAX_SPEED_BLING = 2.9531;
@@ -236,6 +236,7 @@
       this.attack_damage = ATTACK_DAMAGE_RING;
       this.color = COLOR_RING;
       this.berserk_start = 0;
+      this.last_attack_at = 0;
       this.flags.berserk = false;
       this.properties.selectable = true;
     }
@@ -263,6 +264,7 @@
           damage: this.attack_damage
         });
         BvR.arena.addEntity(p);
+        this.last_attack_at = BvR.frame;
         return this.color = 'yellow';
       }
     };
@@ -284,7 +286,7 @@
         }
       }
       Ring.__super__.mainLoop.call(this);
-      if (!this.flags.moving && (BvR.frame + this.frame_offset) % ATTACK_RATE_RING === 0) {
+      if (!this.flags.moving && BvR.frame > (ATTACK_RATE_RING + this.last_attack_at)) {
         return this.checkNearbyEnemies();
       }
     };
@@ -640,18 +642,27 @@
         return false;
       };
       return document.onkeydown = __bind(function(e) {
-        var entity, i, _ref, _results;
-        if (e.keyCode === 27) {
-          this.deselectAll();
-        }
-        if (e.keyCode === 84) {
-          _ref = BvR.arena.entities;
-          _results = [];
-          for (i in _ref) {
-            entity = _ref[i];
-            _results.push(entity instanceof Ring && entity.flags.selected ? entity.berserk() : void 0);
-          }
-          return _results;
+        var entity, i, _ref, _ref2, _results, _results2;
+        switch (e.keyCode) {
+          case 27:
+            return this.deselectAll();
+          case 72:
+            _ref = BvR.arena.entities;
+            _results = [];
+            for (i in _ref) {
+              entity = _ref[i];
+              _results.push(entity.flags.selected ? entity.flags.moving = false : void 0);
+            }
+            return _results;
+            break;
+          case 84:
+            _ref2 = BvR.arena.entities;
+            _results2 = [];
+            for (i in _ref2) {
+              entity = _ref2[i];
+              _results2.push(entity instanceof Ring && entity.flags.selected ? entity.berserk() : void 0);
+            }
+            return _results2;
         }
       }, this);
     };
