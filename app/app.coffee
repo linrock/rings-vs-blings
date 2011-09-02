@@ -15,8 +15,8 @@ MOVE_ATTACK = 1
 RING_SPAWN_CENTER = [200,200]
 BLING_SPAWN_CENTER = [700,500]
 
-COLOR_RING = 'darkblue'
-COLOR_RING_BERSERK = 'deepskyblue'
+COLOR_RING = 'rgb(50,100,255)'
+COLOR_RING_BERSERK = 'rgb(30,180,255)'
 HP_RING = 45
 MAX_SPEED_RING = 2.25*40/FPS
 ATTACK_RATE_RING = ~~(0.8608*FPS)
@@ -59,11 +59,7 @@ class Entity
     context.fillStyle = @color
     if @flags.selected
       context.strokeStyle = 'lightgreen'
-      context.lineWidth = 10
-      context.stroke()
-      context.fill()
-      context.strokeStyle = 'white'
-      context.lineWidth = 6
+      context.lineWidth = 3
       context.stroke()
     context.fill()
   mainLoop: ->
@@ -129,9 +125,9 @@ class Bling extends Entity
     @color = COLOR_BLING if BvR.frame % 2 == 0
     switch (BvR.frame + @frame_offset) % 30
       when 0 then @radius = RADIUS
-      when 21 then @radius = RADIUS*1.05
-      when 25 then @radius = RADIUS*1.1
-      when 29 then @radius = RADIUS*1.05
+      when 21 then @radius = RADIUS*1.08
+      when 25 then @radius = RADIUS*1.15
+      when 29 then @radius = RADIUS*1.08
   mainLoop: ->
     super()
     @animate()
@@ -200,6 +196,11 @@ class Ring extends Entity
       BvR.arena.addEntity(p)
       @last_attack_at = BvR.frame
       @color = 'yellow'
+  draw: ->
+    super()
+    context.strokeStyle = '#2f2f2f'
+    context.lineWidth = 1
+    context.stroke()
   mainLoop: ->
     @color = COLOR_RING if BvR.frame % 2 == 0
     if @flags.berserk
@@ -227,7 +228,7 @@ class Ring extends Entity
       f = new FadeAway
         position: @position,
         radius: @radius,
-        color_code: [0,0,139]
+        color_code: [50,100,255]
       BvR.arena.addEntity(f)
     @flags.finished = true
 
@@ -309,11 +310,11 @@ class Projectile
     @position = kwargs.position
     @target = kwargs.target
     @damage = kwargs.damage
+    @color = kwargs.color || 'rgba(255,255,0,0.8)'
     @direction = [@target.position[0]-@position[0] > 0, @target.position[1]-@position[1] > 0]
-    @max_speed = 20
+    @max_speed = 25
     @rate = 5
     @radius = 2
-    @color = 'black'
     @flags =
       finished: false
   draw: ->
@@ -474,8 +475,8 @@ class Selector
     if @start and @end
       context.fillStyle = SELECTOR_FILL
       context.fillRect(@start[0], @start[1], @end[0]-@start[0], @end[1]-@start[1])
-      context.beginPath()
       context.strokeStyle = SELECTOR_BORDER
+      context.lineWidth = 3
       context.rect(@start[0], @start[1], @end[0]-@start[0], @end[1]-@start[1])
       context.stroke()
   mainLoop: -> @draw()

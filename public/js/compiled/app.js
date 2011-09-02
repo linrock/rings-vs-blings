@@ -20,8 +20,8 @@
   MOVE_ATTACK = 1;
   RING_SPAWN_CENTER = [200, 200];
   BLING_SPAWN_CENTER = [700, 500];
-  COLOR_RING = 'darkblue';
-  COLOR_RING_BERSERK = 'deepskyblue';
+  COLOR_RING = 'rgb(50,100,255)';
+  COLOR_RING_BERSERK = 'rgb(30,180,255)';
   HP_RING = 45;
   MAX_SPEED_RING = 2.25 * 40 / FPS;
   ATTACK_RATE_RING = ~~(0.8608 * FPS);
@@ -62,11 +62,7 @@
       context.fillStyle = this.color;
       if (this.flags.selected) {
         context.strokeStyle = 'lightgreen';
-        context.lineWidth = 10;
-        context.stroke();
-        context.fill();
-        context.strokeStyle = 'white';
-        context.lineWidth = 6;
+        context.lineWidth = 3;
         context.stroke();
       }
       return context.fill();
@@ -175,11 +171,11 @@
         case 0:
           return this.radius = RADIUS;
         case 21:
-          return this.radius = RADIUS * 1.05;
+          return this.radius = RADIUS * 1.08;
         case 25:
-          return this.radius = RADIUS * 1.1;
+          return this.radius = RADIUS * 1.15;
         case 29:
-          return this.radius = RADIUS * 1.05;
+          return this.radius = RADIUS * 1.08;
       }
     };
     Bling.prototype.mainLoop = function() {
@@ -276,6 +272,12 @@
         return this.color = 'yellow';
       }
     };
+    Ring.prototype.draw = function() {
+      Ring.__super__.draw.call(this);
+      context.strokeStyle = '#2f2f2f';
+      context.lineWidth = 1;
+      return context.stroke();
+    };
     Ring.prototype.mainLoop = function() {
       if (BvR.frame % 2 === 0) {
         this.color = COLOR_RING;
@@ -317,7 +319,7 @@
         f = new FadeAway({
           position: this.position,
           radius: this.radius,
-          color_code: [0, 0, 139]
+          color_code: [50, 100, 255]
         });
         BvR.arena.addEntity(f);
       }
@@ -421,11 +423,11 @@
       this.position = kwargs.position;
       this.target = kwargs.target;
       this.damage = kwargs.damage;
+      this.color = kwargs.color || 'rgba(255,255,0,0.8)';
       this.direction = [this.target.position[0] - this.position[0] > 0, this.target.position[1] - this.position[1] > 0];
-      this.max_speed = 20;
+      this.max_speed = 25;
       this.rate = 5;
       this.radius = 2;
-      this.color = 'black';
       this.flags = {
         finished: false
       };
@@ -678,8 +680,8 @@
       if (this.start && this.end) {
         context.fillStyle = SELECTOR_FILL;
         context.fillRect(this.start[0], this.start[1], this.end[0] - this.start[0], this.end[1] - this.start[1]);
-        context.beginPath();
         context.strokeStyle = SELECTOR_BORDER;
+        context.lineWidth = 3;
         context.rect(this.start[0], this.start[1], this.end[0] - this.start[0], this.end[1] - this.start[1]);
         return context.stroke();
       }
