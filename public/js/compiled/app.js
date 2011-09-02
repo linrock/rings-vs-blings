@@ -61,8 +61,12 @@
       context.arc(this.position[0], this.position[1], this.radius, 2 * Math.PI, false);
       context.fillStyle = this.color;
       if (this.flags.selected) {
-        context.strokeStyle = 'orange';
-        context.lineWidth = 3;
+        context.strokeStyle = 'lightgreen';
+        context.lineWidth = 10;
+        context.stroke();
+        context.fill();
+        context.strokeStyle = 'white';
+        context.lineWidth = 6;
         context.stroke();
       }
       return context.fill();

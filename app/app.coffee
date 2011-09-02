@@ -58,8 +58,12 @@ class Entity
     context.arc(@position[0], @position[1], @radius, 2*Math.PI, false)
     context.fillStyle = @color
     if @flags.selected
-      context.strokeStyle = 'orange'
-      context.lineWidth = 3
+      context.strokeStyle = 'lightgreen'
+      context.lineWidth = 10
+      context.stroke()
+      context.fill()
+      context.strokeStyle = 'white'
+      context.lineWidth = 6
       context.stroke()
     context.fill()
   mainLoop: ->
