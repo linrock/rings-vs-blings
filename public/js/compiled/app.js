@@ -11,7 +11,7 @@
   ARENA_WIDTH = 960;
   ARENA_HEIGHT = 600;
   GRID_SIZE = 20;
-  FPS = 40;
+  FPS = 60;
   RADIUS = 9;
   RADIUS_2 = RADIUS * RADIUS;
   SELECTOR_FILL = 'rgba(102,255,0,0.1)';
@@ -23,14 +23,14 @@
   COLOR_RING = 'darkblue';
   COLOR_RING_BERSERK = 'deepskyblue';
   HP_RING = 45;
-  MAX_SPEED_RING = 2.25;
+  MAX_SPEED_RING = 2.25 * 40 / FPS;
   ATTACK_RATE_RING = ~~(0.8608 * FPS);
-  ATTACK_RANGE_RING = 200;
+  ATTACK_RANGE_RING = 180;
   ATTACK_DAMAGE_RING = 6;
-  BERSERK_DURATION = 10 * FPS;
+  BERSERK_DURATION = 15 * FPS;
   COLOR_BLING = 'rgb(102,255,0)';
   HP_BLING = 30;
-  MAX_SPEED_BLING = 2.9531;
+  MAX_SPEED_BLING = 2.9531 * 40 / FPS;
   ATTACK_RANGE_BLING = 40;
   ATTACK_DAMAGE_BLING = 35;
   arena = document.getElementById('arena');
@@ -203,25 +203,29 @@
       return this.flags.finished = true;
     };
     Bling.prototype.attackNearest = function() {
-      var candidates, d2, e, i, target, x, y, _ref;
-      if (!(this.target_id && BvR.arena.entities[this.target_id])) {
-        candidates = [];
-        _ref = BvR.arena.entities;
-        for (i in _ref) {
-          e = _ref[i];
-          if (e instanceof Ring) {
-            x = e.position[0] - this.position[0];
-            y = e.position[1] - this.position[1];
-            d2 = Math.pow(x, 2) + Math.pow(y, 2);
-            candidates.push([d2, i]);
-          }
-        }
-        if (candidates.length > 0) {
-          candidates.sort();
-          this.target_id = candidates[0][1];
+      var candidates, closest, d2, e, i, target, x, y, _ref, _ref2, _ref3;
+      candidates = [];
+      _ref = BvR.arena.entities;
+      for (i in _ref) {
+        e = _ref[i];
+        if (e instanceof Ring) {
+          _ref2 = [e.position[0] - this.position[0], e.position[1] - this.position[1]], x = _ref2[0], y = _ref2[1];
+          d2 = Math.pow(x, 2) + Math.pow(y, 2);
+          candidates.push([d2, i]);
         }
       }
-      if (target = BvR.arena.entities[this.target_id]) {
+      if (candidates.length > 0) {
+        closest = candidates.sort()[0];
+        if (target = BvR.arena.entities[this.target_id]) {
+          _ref3 = target.position, x = _ref3[0], y = _ref3[1];
+          d2 = Math.pow(x, 2) + Math.pow(y, 2);
+          if (closest[0] < 0.1 * d2) {
+            this.target_id = closest[1];
+          }
+        } else {
+          this.target_id = closest[1];
+        }
+        target = BvR.arena.entities[this.target_id];
         return this.move(target.position);
       }
     };
@@ -291,13 +295,13 @@
       }
     };
     Ring.prototype.takeDamage = function(hp) {
-      if (this.hp -= hp <= 0) {
+      this.hp -= hp;
+      if (this.hp < 0) {
         return this.destroy();
       }
     };
     Ring.prototype.berserk = function() {
       if (this.hp > 10) {
-        console.log('BERSERK');
         this.hp -= 10;
         this.flags.berserk = true;
         return this.berserk_start = BvR.frame;

@@ -2,7 +2,7 @@ ARENA_WIDTH = 960
 ARENA_HEIGHT = 600
 GRID_SIZE = 20
 
-FPS = 40
+FPS = 60
 RADIUS = 9
 RADIUS_2 = RADIUS*RADIUS
 
@@ -18,15 +18,15 @@ BLING_SPAWN_CENTER = [700,500]
 COLOR_RING = 'darkblue'
 COLOR_RING_BERSERK = 'deepskyblue'
 HP_RING = 45
-MAX_SPEED_RING = 2.25
+MAX_SPEED_RING = 2.25*40/FPS
 ATTACK_RATE_RING = ~~(0.8608*FPS)
-ATTACK_RANGE_RING = 200
+ATTACK_RANGE_RING = 180
 ATTACK_DAMAGE_RING = 6
-BERSERK_DURATION = 10*FPS
+BERSERK_DURATION = 15*FPS
 
 COLOR_BLING = 'rgb(102,255,0)'
 HP_BLING = 30
-MAX_SPEED_BLING = 2.9531 # 2.5
+MAX_SPEED_BLING = 2.9531*40/FPS # 2.5
 ATTACK_RANGE_BLING = 40
 ATTACK_DAMAGE_BLING = 35
 
@@ -146,19 +146,24 @@ class Bling extends Entity
     BvR.arena.addEntity(e)
     @flags.finished = true
   attackNearest: ->
-    unless @target_id and BvR.arena.entities[@target_id]
-      candidates = []
-      for i,e of BvR.arena.entities
-        if e instanceof Ring
-          x = e.position[0]-@position[0]
-          y = e.position[1]-@position[1]
-          d2 = Math.pow(x,2)+Math.pow(y,2)
-          candidates.push([d2,i])
-      if candidates.length > 0
-        candidates.sort()
-        @target_id = candidates[0][1]
-    if target = BvR.arena.entities[@target_id]
+    candidates = []
+    for i,e of BvR.arena.entities
+      if e instanceof Ring
+        [x,y] = [e.position[0]-@position[0], e.position[1]-@position[1]]
+        d2 = Math.pow(x,2)+Math.pow(y,2)
+        candidates.push([d2,i])
+    if candidates.length > 0
+      closest = candidates.sort()[0]
+      if target = BvR.arena.entities[@target_id]
+        [x,y] = target.position
+        d2 = Math.pow(x,2)+Math.pow(y,2)
+        if closest[0] < 0.1*d2
+          @target_id = closest[1]
+      else
+        @target_id = closest[1]
+      target = BvR.arena.entities[@target_id]
       @move(target.position)
+
 
 
 class Ring extends Entity
@@ -206,10 +211,10 @@ class Ring extends Entity
     if not @flags.moving and BvR.frame > (ATTACK_RATE_RING+@last_attack_at)
       @checkNearbyEnemies()
   takeDamage: (hp) ->
-    @destroy() if @hp -= hp <= 0
+    @hp -= hp
+    @destroy() if @hp < 0
   berserk: ->
     if @hp > 10
-      console.log('BERSERK')
       @hp -= 10
       @flags.berserk = true
       @berserk_start = BvR.frame
