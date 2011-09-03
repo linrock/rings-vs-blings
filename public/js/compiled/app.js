@@ -167,7 +167,7 @@
       if (BvR.frame % 2 === 0) {
         this.color = COLOR_BLING;
       }
-      switch ((BvR.frame + this.frame_offset) % 30) {
+      switch ((BvR.frame + this.frame_offset) % FPS) {
         case 0:
           return this.radius = RADIUS;
         case 21:
@@ -176,6 +176,8 @@
           return this.radius = RADIUS * 1.15;
         case 29:
           return this.radius = RADIUS * 1.08;
+        case 33:
+          return this.radius = RADIUS;
       }
     };
     Bling.prototype.mainLoop = function() {
@@ -603,9 +605,12 @@
       var getOffsets;
       getOffsets = function(e) {
         var x, y;
-        x = e.x - arena.offsetParent.offsetLeft + arena.clientLeft + window.pageXOffset;
-        y = e.y - arena.offsetTop - arena.clientTop + window.pageYOffset;
+        x = e.x - arena.offsetParent.offsetLeft - arena.offsetLeft + arena.clientLeft + window.pageXOffset;
+        y = e.y - arena.offsetParent.offsetTop - arena.offsetTop - arena.clientTop + window.pageYOffset;
         return [x, y];
+      };
+      document.oncontextmenu = function(e) {
+        return e.preventDefault();
       };
       document.onselectstart = function(e) {
         return e.preventDefault();
@@ -650,9 +655,6 @@
           return _results;
         }
       }, this);
-      document.oncontextmenu = function() {
-        return false;
-      };
       return document.onkeydown = __bind(function(e) {
         var entity, i, _ref, _ref2, _results, _results2;
         switch (e.keyCode) {

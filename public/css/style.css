@@ -1,7 +1,16 @@
 body {
+  margin-top: 0px;
   cursor: default;
   background-color: #333;
   color: white;
+}
+#header {
+  background-color: #1e1e1e;
+}
+#header h1 {
+  margin: 0px;
+  padding: 10px;
+  font-size: 1.5em;
 }
 #container {
   padding-top: 80px;
@@ -22,8 +31,17 @@ canvas#arena:hover {
 #stats {
   position: absolute;
   z-index: 1000;
+  color: #afafaf;
+  font-size: 0.8em;
+}
+#stats ul {
+  list-style: none;
+}
+#stats li {
+  display: inline;
 }
 #instructions {
+  display: none;
   float: left;
   background-color: #fffecf;
   padding: 3px 20px;
@@ -33,13 +51,4 @@ canvas#arena:hover {
 }
 #instructions ul {
   list-style: disc;
-}
-#stats {
-  font-family: Helvetica, Arial, sans-serif;
-}
-#stats ul {
-  list-style: none;
-}
-#stats li {
-  display: inline;
 }

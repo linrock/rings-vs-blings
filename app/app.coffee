@@ -123,11 +123,12 @@ class Bling extends Entity
           break
   animate: ->
     @color = COLOR_BLING if BvR.frame % 2 == 0
-    switch (BvR.frame + @frame_offset) % 30
+    switch (BvR.frame + @frame_offset) % FPS
       when 0 then @radius = RADIUS
       when 21 then @radius = RADIUS*1.08
       when 25 then @radius = RADIUS*1.15
       when 29 then @radius = RADIUS*1.08
+      when 33 then @radius = RADIUS
   mainLoop: ->
     super()
     @animate()
@@ -431,9 +432,11 @@ class Selector
     @bindKeys()
   bindKeys: ->
     getOffsets = (e) ->
-      x = e.x-arena.offsetParent.offsetLeft+arena.clientLeft+window.pageXOffset
-      y = e.y-arena.offsetTop-arena.clientTop+window.pageYOffset
+      x = e.x-arena.offsetParent.offsetLeft-arena.offsetLeft+arena.clientLeft+window.pageXOffset
+      y = e.y-arena.offsetParent.offsetTop-arena.offsetTop-arena.clientTop+window.pageYOffset
       [x,y]
+    document.oncontextmenu = (e) ->
+      e.preventDefault()
     document.onselectstart = (e) ->
       e.preventDefault()
     document.onmousemove = (e) =>
@@ -460,7 +463,6 @@ class Selector
           if entity.properties?.selectable and Math.pow(entity.position[0]-x,2)+Math.pow(entity.position[1]-y,2) < RADIUS_2
             entity.flags.selected = true
             break
-    document.oncontextmenu = -> false
     document.onkeydown = (e) =>
       switch e.keyCode
         when 27 # esc
