@@ -431,7 +431,7 @@ class Selector
     @bindKeys()
   bindKeys: ->
     getOffsets = (e) ->
-      x = e.x-arena.offsetLeft-arena.clientLeft+window.pageXOffset
+      x = e.x-arena.offsetParent.offsetLeft+arena.clientLeft+window.pageXOffset
       y = e.y-arena.offsetTop-arena.clientTop+window.pageYOffset
       [x,y]
     document.onselectstart = (e) ->
@@ -440,17 +440,18 @@ class Selector
       @end = getOffsets(e) if @start
     document.onmousedown = (e) =>
       position = getOffsets(e)
-      if e.button == 0
-        @start = position
-      else if e.button == 2
-        for i,entity of BvR.arena.entities
-          if entity.flags.selected
-            if e.shiftKey
-              entity.move(position, true)
-            else
-              entity.move(position)
-            m = new MoveIndicator(position: position)
-            BvR.arena.addEntity(m)
+      switch e.button
+        when 0
+          @start = position
+        when 2
+          for i,entity of BvR.arena.entities
+            if entity.flags.selected
+              if e.shiftKey
+                entity.move(position, true)
+              else
+                entity.move(position)
+              m = new MoveIndicator(position: position)
+              BvR.arena.addEntity(m)
     document.onmouseup = (e) =>
       if e.button == 0
         @selectRegion(@start, @end)

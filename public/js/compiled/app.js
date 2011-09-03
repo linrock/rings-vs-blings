@@ -603,7 +603,7 @@
       var getOffsets;
       getOffsets = function(e) {
         var x, y;
-        x = e.x - arena.offsetLeft - arena.clientLeft + window.pageXOffset;
+        x = e.x - arena.offsetParent.offsetLeft + arena.clientLeft + window.pageXOffset;
         y = e.y - arena.offsetTop - arena.clientTop + window.pageYOffset;
         return [x, y];
       };
@@ -618,18 +618,19 @@
       document.onmousedown = __bind(function(e) {
         var entity, i, m, position, _ref, _results;
         position = getOffsets(e);
-        if (e.button === 0) {
-          return this.start = position;
-        } else if (e.button === 2) {
-          _ref = BvR.arena.entities;
-          _results = [];
-          for (i in _ref) {
-            entity = _ref[i];
-            _results.push(entity.flags.selected ? (e.shiftKey ? entity.move(position, true) : entity.move(position), m = new MoveIndicator({
-              position: position
-            }), BvR.arena.addEntity(m)) : void 0);
-          }
-          return _results;
+        switch (e.button) {
+          case 0:
+            return this.start = position;
+          case 2:
+            _ref = BvR.arena.entities;
+            _results = [];
+            for (i in _ref) {
+              entity = _ref[i];
+              _results.push(entity.flags.selected ? (e.shiftKey ? entity.move(position, true) : entity.move(position), m = new MoveIndicator({
+                position: position
+              }), BvR.arena.addEntity(m)) : void 0);
+            }
+            return _results;
         }
       }, this);
       document.onmouseup = __bind(function(e) {

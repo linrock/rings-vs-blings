@@ -7,16 +7,21 @@ body {
   padding-top: 80px;
   width: 960px;
   margin: 0 auto;
+  position: relative;
 }
 canvas {
   background-color: black;
+  position: absolute;
 }
 canvas#arena {
   border: 3px solid #444;
-  box-shadow: 0 0 10px black;
 }
 canvas#arena:hover {
   cursor: crosshair;
+}
+#stats {
+  position: absolute;
+  z-index: 1000;
 }
 #instructions {
   float: left;
@@ -31,4 +36,10 @@ canvas#arena:hover {
 }
 #stats {
   font-family: Helvetica, Arial, sans-serif;
+}
+#stats ul {
+  list-style: none;
+}
+#stats li {
+  display: inline;
 }
