@@ -8,24 +8,27 @@
     <header id="header">
       <h1>Rings Vs Blings</h1>
     </header>
-    <div id="instructions">
-      <ul>
-        <li>Survive waves of blings.</li>
-        <li>You control rings. Rings shoot at the nearest blings.</li>
-        <li>Stay away from blings! They explode on impact or death.</li>
-        <li>Select units by selecting an area.</li>
-        <li>Right click after selecting units to move.</li>
-        <li>Press <b>t</b> to go berserk.</li>
-        <li>Press <b>h</b> while moving to stop.</li>
-      </ul>
-    </div>
     <div id="container">
-      <canvas id="arena"></canvas>
-      <div id="stats">
+      <div id="instructions">
         <ul>
-          <li><b>Wave:</b> <span id="wave-count">0</span></li>
-          <li><b>Kills:</b> <span id="kills-count">0</span></li>
+          <li>Survive waves of blings.</li>
+          <li>You control rings. Rings shoot at the nearest blings.</li>
+          <li>Stay away from blings! They explode on impact or death.</li>
+          <li>Select units by selecting an area.</li>
+          <li>Right click after selecting units to move.</li>
+          <li>Press <b>t</b> to go berserk.</li>
+          <li>Press <b>h</b> while moving to stop.</li>
         </ul>
+      </div>
+      <div id="arena-container">
+        <canvas id="arena"></canvas>
+        <div id="stats-container">
+          <div id="stats">
+            <span class="score-item"><b>Wave:</b> <span id="wave-count">0</span></span>
+            <span class="score-item"><b>Rings:</b> <span id="units-count">0</span></span>
+            <span class="score-item"><b>Kills:</b> <span id="kills-count">0</span></span>
+          </div>
+        </div>
       </div>
     </div>
     <script src="js/compiled/app.js"></script>

@@ -245,6 +245,7 @@
       this.last_attack_at = 0;
       this.flags.berserk = false;
       this.properties.selectable = true;
+      ++BvR.stats.units;
     }
     Ring.prototype.checkNearbyEnemies = function() {
       var candidates, d2, e, i, p, target, x, y, _ref;
@@ -319,6 +320,7 @@
     Ring.prototype.destroy = function() {
       var f;
       if (!this.flags.finished) {
+        BvR.selectors.units.innerText = --BvR.stats.units;
         f = new FadeAway({
           position: this.position,
           radius: this.radius,
@@ -500,7 +502,7 @@
       return delete this.entities[id];
     };
     Arena.prototype.spawnEntity = function(count, type) {
-      var angle, center, checkPositionAvailable, i, m, new_position, position, positions, v, _results;
+      var angle, center, checkPositionAvailable, i, m, new_position, position, positions, v;
       if (type == null) {
         type = Bling;
       }
@@ -524,7 +526,6 @@
         center = BLING_SPAWN_CENTER;
       }
       positions = [center];
-      _results = [];
       for (i = 1; 1 <= count ? i <= count : i >= count; 1 <= count ? i++ : i--) {
         angle = Math.random() * 2 * Math.PI;
         m = RADIUS + 1;
@@ -535,11 +536,11 @@
           new_position = [position[0] + v[0], position[1] + v[1]];
         }
         positions.push(new_position);
-        _results.push(this.addEntity(new type({
+        this.addEntity(new type({
           position: new_position
-        })));
+        }));
       }
-      return _results;
+      return BvR.selectors.units.innerText = BvR.stats.units;
     };
     Arena.prototype.nextWave = function() {
       return BvR.selectors.wave.innerText = ++BvR.stats.wave;
@@ -820,10 +821,12 @@
     frame: 0,
     stats: {
       kills: 0,
+      units: 0,
       wave: 0
     },
     selectors: {
       kills: document.getElementById('kills-count'),
+      units: document.getElementById('units-count'),
       wave: document.getElementById('wave-count')
     }
   };

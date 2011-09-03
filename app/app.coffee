@@ -178,6 +178,7 @@ class Ring extends Entity
     @last_attack_at = 0
     @flags.berserk = false
     @properties.selectable = true
+    ++BvR.stats.units
   checkNearbyEnemies: ->
     candidates = []
     for i,e of BvR.arena.entities
@@ -227,6 +228,7 @@ class Ring extends Entity
       @berserk_start = BvR.frame
   destroy: ->
     unless @flags.finished
+      BvR.selectors.units.innerText = --BvR.stats.units
       f = new FadeAway
         position: @position,
         radius: @radius,
@@ -386,6 +388,7 @@ class Arena
         new_position = [position[0]+v[0],position[1]+v[1]]
       positions.push(new_position)
       @addEntity(new type(position: new_position))
+    BvR.selectors.units.innerText = BvR.stats.units
   nextWave: ->
     BvR.selectors.wave.innerText = ++BvR.stats.wave
 
@@ -548,9 +551,11 @@ window.BvR =
   frame: 0
   stats:
     kills: 0
+    units: 0
     wave: 0
   selectors:
     kills: document.getElementById('kills-count')
+    units: document.getElementById('units-count')
     wave: document.getElementById('wave-count')
 
 

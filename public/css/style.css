@@ -13,9 +13,11 @@ body {
   font-size: 1.5em;
 }
 #container {
-  padding-top: 80px;
   width: 960px;
+  padding-top: 80px;
   margin: 0 auto;
+}
+#arena-container {
   position: relative;
 }
 canvas {
@@ -28,17 +30,22 @@ canvas#arena {
 canvas#arena:hover {
   cursor: crosshair;
 }
-#stats {
+#stats-container {
   position: absolute;
+  font-size: 0.7em;
+  left: 3px;
+  top: 3px;
+  width: 100%;
   z-index: 1000;
-  color: #afafaf;
-  font-size: 0.8em;
+  color: #efefef;
+  opacity: 0.6;
+  background-color: #3f3f3f;
 }
-#stats ul {
-  list-style: none;
+#stats {
+  padding: 10px;
 }
-#stats li {
-  display: inline;
+.score-item {
+  padding-right: 4px;
 }
 #instructions {
   display: none;
