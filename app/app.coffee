@@ -344,6 +344,7 @@ class Arena
   constructor: ->
     @entities = {}
     @interval = false
+    @waveInterval = false
     @counter = 0
     @mainLoop()
   mainLoop: ->
@@ -359,6 +360,14 @@ class Arena
       BvR.selector.draw()
       BvR.frame++
     , 1000/FPS
+    @waveInterval = setInterval =>
+      @nextWave() if @noMoreBlings()
+    , 1000
+  noMoreBlings: ->
+    for i,e of @entities
+      if e instanceof Bling
+        return false
+    true
   addEntity: (e) ->
     @entities[@counter] = e
     BvR.collisions.updateEntity(@counter, e.position) if e.properties?.collides
@@ -389,8 +398,16 @@ class Arena
       positions.push(new_position)
       @addEntity(new type(position: new_position))
     BvR.selectors.units.innerText = BvR.stats.units
-  nextWave: ->
+  incrementWaveNum: ->
     BvR.selectors.wave.innerText = ++BvR.stats.wave
+  firstWave: ->
+    @incrementWaveNum()
+    @spawnEntity(40, Ring)
+    @spawnEntity(20, Bling)
+  nextWave: ->
+    @incrementWaveNum()
+    @spawnEntity(10, Ring)
+    @spawnEntity(~~((BvR.stats.wave/4) * 20), Bling)
 
 
 class DirectionIndicator
@@ -552,12 +569,11 @@ window.BvR =
   stats:
     kills: 0
     units: 0
-    wave: 0
+    wave: 1
   selectors:
     kills: document.getElementById('kills-count')
     units: document.getElementById('units-count')
     wave: document.getElementById('wave-count')
 
 
-BvR.arena.spawnEntity(60, Ring)
-BvR.arena.spawnEntity(45, Bling)
+BvR.arena.firstWave()
